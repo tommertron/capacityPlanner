@@ -1,0 +1,25 @@
+# Python bytecode and cache directories
+__pycache__/
+*.py[cod]
+
+# Python packaging and distribution artifacts
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Virtual environments and dependency folders
+env/
+.env/
+venv/
+.venv/
+
+# Node / front-end dependencies
+node_modules/
+
+# Local IDE/project settings
+.idea/
+.vscode/
+
+# Project-specific exclusions
+portfolios/earoadmap/

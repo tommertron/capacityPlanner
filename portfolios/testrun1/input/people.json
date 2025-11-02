@@ -1,0 +1,106 @@
+[
+  {
+    "active": true,
+    "notes": "",
+    "person": "Alice",
+    "preferred_parent_summaries": [
+      "Digital Transformation",
+      "Data & Analytics"
+    ],
+    "roles": [
+      "BA"
+    ],
+    "skillsets": [
+      "business-analysis"
+    ],
+    "start_date": "2025-01-01"
+  },
+  {
+    "active": true,
+    "notes": "Dual-role portfolio planner",
+    "person": "Bob",
+    "preferred_parent_summaries": [
+      "Infrastructure Modernization"
+    ],
+    "roles": [
+      "Planner",
+      "BA"
+    ],
+    "skillsets": [
+      "roadmapping",
+      "process-design"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Nora",
+    "preferred_parent_summaries": [
+      "Infrastructure Modernization",
+      "Platform Enablement"
+    ],
+    "roles": [
+      "Planner"
+    ],
+    "skillsets": [
+      "operations",
+      "infrastructure"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Cara",
+    "preferred_parent_summaries": [
+      "Digital Transformation"
+    ],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "front-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Iris",
+    "preferred_parent_summaries": [
+      "Sales Enablement"
+    ],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "front-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Liam",
+    "preferred_parent_summaries": [
+      "Procurement & Legal"
+    ],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "back-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Omar",
+    "preferred_parent_summaries": [
+      "Systems Integration"
+    ],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "back-end"
+    ]
+  }
+]

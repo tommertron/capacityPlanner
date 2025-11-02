@@ -1,0 +1,15 @@
+{
+  "planning_start": "2025-01-01",
+  "planning_end": "2027-01-01",
+  "max_months_if_open_ended": 120,
+  "ktlo_pct_by_role": { "BA": 0.10, "Planner": 0.20, "Dev": 0.15 },
+  "curves": {
+    "dev_curve": [0.10, 0.20, 0.40, 0.20, 0.10],
+    "ba_curve": [0.10, 0.20, 0.40, 0.20, 0.10],
+    "planner_curve": "uniform"
+  },
+  "max_concurrent_per_role": { "BA": 1, "Planner": 1, "Dev": 2 },
+  "random_seed": 42,
+  "logging_level": "INFO",
+  "planner_project_month_cap_pct": 0.2
+}

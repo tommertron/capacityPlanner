@@ -1,0 +1,354 @@
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+import json as json_module
+from flask import Flask, jsonify, render_template, request, url_for, send_file, abort
+
+from .jobs import Job, JobStore
+
+REQUIRED_INPUT_FILES = ("projects.csv", "people.json", "config.json")
+
+
+def _default_projects_root() -> Path:
+    return (Path(__file__).resolve().parent.parent / "portfolios").resolve()
+
+
+def _resolve_projects_root() -> Path:
+    env_value = os.getenv("PROJECTS_ROOT")
+    if env_value:
+        return Path(env_value).expanduser().resolve()
+    return _default_projects_root()
+
+
+def _validate_within_root(path: Path, root: Path) -> None:
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"Portfolio directory must be inside {root}") from exc
+
+
+def _check_input_dir(project_dir: Path) -> Tuple[Path, List[str]]:
+    input_dir = project_dir / "input"
+    missing: List[str] = []
+    if not input_dir.is_dir():
+        missing.extend(list(REQUIRED_INPUT_FILES))
+        return input_dir, missing
+    for name in REQUIRED_INPUT_FILES:
+        if not (input_dir / name).is_file():
+            missing.append(name)
+    return input_dir, missing
+
+
+def _resolve_project_dir(raw_value: str, root: Path) -> Path:
+    if not raw_value:
+        raise ValueError("project_dir is required")
+    candidate = Path(raw_value).expanduser()
+    if candidate.is_absolute():
+        project_dir = candidate.resolve()
+    else:
+        project_dir = (root / candidate).resolve()
+    if not project_dir.exists() or not project_dir.is_dir():
+        raise ValueError(f"Portfolio directory not found: {project_dir}")
+    _validate_within_root(project_dir, root)
+    input_dir, missing = _check_input_dir(project_dir)
+    if missing:
+        missing_list = ", ".join(missing)
+        raise ValueError(
+            f"Portfolio directory must contain input files at {input_dir}: missing {missing_list}"
+        )
+    return project_dir
+
+
+def _list_project_dirs(root: Path) -> List[Dict[str, object]]:
+    entries: List[Dict[str, object]] = []
+    if not root.exists():
+        return entries
+    for child in sorted(root.iterdir()):
+        if not child.is_dir():
+            continue
+        rel_name = child.relative_to(root).as_posix()
+        input_dir, missing = _check_input_dir(child)
+        entries.append(
+            {
+                "name": rel_name,
+                "input_dir": input_dir.as_posix(),
+                "is_valid": not missing,
+            }
+        )
+    return entries
+
+
+def _job_to_dict(job: Job) -> Dict[str, object]:
+    payload = job.to_dict()
+    return payload
+
+
+def create_app() -> Flask:
+    app = Flask(__name__)
+    projects_root = _resolve_projects_root()
+    job_store = JobStore()
+    app.config["PROJECTS_ROOT"] = projects_root
+    app.config["JOB_STORE"] = job_store
+
+    @app.get("/")
+    def index() -> str:
+        jobs = [_job_to_dict(job) for job in job_store.list_jobs()]
+        dirs = _list_project_dirs(projects_root)
+        return render_template("index.html", jobs=jobs, project_dirs=dirs, projects_root=projects_root)
+
+    @app.get("/dirs")
+    def directories():
+        dirs = _list_project_dirs(projects_root)
+        return jsonify({"projects": dirs})
+
+    @app.post("/run")
+    def run_job():
+        data = request.get_json(silent=True) or {}
+        project_dir_value = data.get("project_dir") or request.form.get("project_dir")
+        if project_dir_value is None:
+            return jsonify({"error": "project_dir is required"}), 400
+        try:
+            project_dir = _resolve_project_dir(project_dir_value, projects_root)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        cmd = [
+            sys.executable,
+            "-m",
+            "capacity_tracker.main",
+            "--project-dir",
+            str(project_dir),
+        ]
+        job = job_store.create_job(project_dir, cmd)
+        job_store.start_job(job)
+        status_url = url_for("status_job", job_id=job.id)
+        return jsonify({"job_id": job.id, "status_url": status_url}), 202
+
+    @app.get("/status/<job_id>")
+    def status_job(job_id: str):
+        job = job_store.get_job(job_id)
+        if not job:
+            return jsonify({"error": "job not found"}), 404
+        return jsonify(_job_to_dict(job))
+
+    @app.get("/files/<path:file_path>")
+    def serve_file(file_path: str):
+        """Serve files from the portfolios directory"""
+        file_full_path = projects_root / file_path
+        try:
+            # Validate the path is within the projects root
+            file_full_path = file_full_path.resolve()
+            _validate_within_root(file_full_path, projects_root)
+
+            if not file_full_path.exists():
+                abort(404)
+            if not file_full_path.is_file():
+                abort(404)
+
+            return send_file(file_full_path)
+        except (ValueError, OSError):
+            abort(404)
+
+    @app.get("/api/people/<portfolio_name>")
+    def get_people(portfolio_name: str):
+        """Get people.json for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            people_file = portfolio_path / "input" / "people.json"
+            if not people_file.exists():
+                return jsonify({"error": "people.json not found"}), 404
+
+            with open(people_file, 'r') as f:
+                people_data = json_module.load(f)
+
+            return jsonify(people_data)
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/people/<portfolio_name>")
+    def save_people(portfolio_name: str):
+        """Save people.json for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            people_data = request.get_json()
+            if not isinstance(people_data, list):
+                return jsonify({"error": "people data must be an array"}), 400
+
+            people_file = portfolio_path / "input" / "people.json"
+            people_file.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(people_file, 'w') as f:
+                json_module.dump(people_data, f, indent=2)
+
+            return jsonify({"success": True})
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.get("/api/projects/<portfolio_name>")
+    def get_projects(portfolio_name: str):
+        """Get projects.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            projects_file = portfolio_path / "input" / "projects.csv"
+            if not projects_file.exists():
+                return jsonify({"error": "projects.csv not found"}), 404
+
+            import csv
+            projects_data = []
+            with open(projects_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    projects_data.append(row)
+
+            return jsonify(projects_data)
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/projects/<portfolio_name>")
+    def save_projects(portfolio_name: str):
+        """Save projects.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            projects_data = request.get_json()
+            if not isinstance(projects_data, list):
+                return jsonify({"error": "projects data must be an array"}), 400
+
+            projects_file = portfolio_path / "input" / "projects.csv"
+            projects_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Write CSV with expected columns
+            import csv
+            if len(projects_data) > 0:
+                fieldnames = list(projects_data[0].keys())
+                with open(projects_file, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(projects_data)
+            else:
+                # Create empty file with headers
+                with open(projects_file, 'w', newline='') as f:
+                    pass
+
+            return jsonify({"success": True})
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.get("/api/programs/<portfolio_name>")
+    def get_programs(portfolio_name: str):
+        """Get programs.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            programs_file = portfolio_path / "input" / "programs.csv"
+            if not programs_file.exists():
+                # Return empty array if file doesn't exist
+                return jsonify([])
+
+            import csv
+            programs_data = []
+            with open(programs_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    programs_data.append(row)
+
+            return jsonify(programs_data)
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/programs/<portfolio_name>")
+    def save_programs(portfolio_name: str):
+        """Save programs.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            programs_data = request.get_json()
+            if not isinstance(programs_data, list):
+                return jsonify({"error": "programs data must be an array"}), 400
+
+            programs_file = portfolio_path / "input" / "programs.csv"
+            programs_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Write CSV with expected columns
+            import csv
+            if len(programs_data) > 0:
+                fieldnames = ['name', 'color']
+                with open(programs_file, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(programs_data)
+            else:
+                # Create empty file with headers
+                fieldnames = ['name', 'color']
+                with open(programs_file, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+
+            return jsonify({"success": True})
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.get("/api/config/<portfolio_name>")
+    def get_config(portfolio_name: str):
+        """Get config.json for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            config_file = portfolio_path / "input" / "config.json"
+            if not config_file.exists():
+                return jsonify({"error": "config.json not found"}), 404
+
+            with open(config_file, "r") as f:
+                config_data = json_module.load(f)
+
+            return jsonify(config_data)
+        except (ValueError, OSError, json_module.JSONDecodeError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/config/<portfolio_name>")
+    def save_config(portfolio_name: str):
+        """Save config.json for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            config_data = request.get_json()
+            if not isinstance(config_data, dict):
+                return jsonify({"error": "config data must be an object"}), 400
+
+            config_file = portfolio_path / "input" / "config.json"
+            config_file.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(config_file, "w") as f:
+                json_module.dump(config_data, f, indent=2)
+
+            return jsonify({"success": True})
+        except (ValueError, OSError, json_module.JSONDecodeError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    return app
+
+
+if __name__ == "__main__":
+    create_app().run(debug=True)

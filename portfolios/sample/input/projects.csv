@@ -1,0 +1,22 @@
+id,name,priority,effort_ba_pm,effort_planner_pm,effort_dev_pm,parent_summary,required_skillsets_ba,required_skillsets_planner,required_skillsets_dev
+P1,Billing Platform,1,1.0,1.2,3.0,Digital Transformation,,,front-end;back-end
+P2,SSO Rollout,2,0.5,0.3,1.0,Infrastructure Modernization,,,security
+P3,Customer Insights Dashboard,3,0.7,0.5,1.6,Data & Analytics,,,data-analytics
+P4,Incident Response Automation,4,0.6,0.7,1.8,Infrastructure Modernization,,,security
+P5,Subscription Billing Enhancements,5,0.9,1.0,2.5,Digital Transformation,,,front-end;back-end
+P6,Procurement Workflow Tool,6,0.5,0.6,1.1,Procurement & Legal,,,back-end
+P7,Partner API Integration,7,0.8,0.9,1.9,Platform Enablement,,,integration
+P8,Sales CRM Data Cleanse,8,0.4,0.6,1.0,Sales Enablement,,,data-ops
+P9,Content Delivery Network Migration,9,0.3,0.4,1.7,Infrastructure Modernization,,,infrastructure
+P10,Finance Reporting Dashboard,10,0.6,0.7,1.2,Data & Analytics,,,data-analytics
+P11,Cloud Security Assessment,11,0.5,0.4,0.8,Governance & Compliance,,,security
+P12,Learning Management System Pilot,12,0.7,0.6,1.5,Employee Experience,,,front-end
+P13,Product Catalog Revamp,13,0.8,1.0,2.3,Digital Transformation,,,front-end;back-end
+P14,Vendor Risk Portal,14,0.6,0.8,1.2,Procurement & Legal,,,back-end
+P15,Customer Feedback Analyzer,15,0.4,0.5,1.0,Data & Analytics,,,data-analytics
+P16,AI Knowledge Assistant Pilot,16,0.9,0.6,1.8,AI & Automation,,,ai
+P17,Legacy ERP Data Migration,17,1.0,1.2,2.6,Systems Integration,,,data-migration
+P18,Team Collaboration Hub,18,0.7,0.8,1.5,Employee Experience,,,collaboration
+P19,Contract Renewal Tracker,19,0.5,0.7,0.9,Procurement & Legal,,,back-end
+P20,Marketing Attribution Model,20,0.6,0.5,1.3,Data & Analytics,,,data-analytics
+P21,IT Asset Inventory Overhaul,21,0.6,0.8,1.4,Infrastructure Modernization,,,infrastructure

@@ -1,0 +1,301 @@
+person,role,project_id,project_name,month,project_alloc_pct,total_pct
+Alice,,,KTLO,2025-01,0.1,0.9
+Alice,BA,P1,Billing Platform,2025-01,0.5,0.9
+Alice,BA,P4,Incident Response Automation,2025-01,0.3,0.9
+Alice,,,KTLO,2025-02,0.1,0.9
+Alice,BA,P1,Billing Platform,2025-02,0.5,0.9
+Alice,BA,P4,Incident Response Automation,2025-02,0.3,0.9
+Alice,,,KTLO,2025-03,0.1,0.85
+Alice,BA,P11,Cloud Security Assessment,2025-03,0.5,0.85
+Alice,BA,P6,Procurement Workflow Tool,2025-03,0.25,0.85
+Alice,,,KTLO,2025-04,0.1,0.8
+Alice,BA,P5,Subscription Billing Enhancements,2025-04,0.45,0.8
+Alice,BA,P6,Procurement Workflow Tool,2025-04,0.25,0.8
+Alice,,,KTLO,2025-05,0.1,0.55
+Alice,BA,P5,Subscription Billing Enhancements,2025-05,0.45,0.55
+Alice,,,KTLO,2025-06,0.1,0.5
+Alice,BA,P7,Partner API Integration,2025-06,0.4,0.5
+Alice,,,KTLO,2025-07,0.1,0.9
+Alice,BA,P15,Customer Feedback Analyzer,2025-07,0.4,0.9
+Alice,BA,P7,Partner API Integration,2025-07,0.4,0.9
+Alice,,,KTLO,2025-08,0.1,0.1
+Alice,,,KTLO,2025-09,0.1,0.1
+Alice,,,KTLO,2025-10,0.1,0.75
+Alice,BA,P10,Finance Reporting Dashboard,2025-10,0.3,0.75
+Alice,BA,P12,Learning Management System Pilot,2025-10,0.35,0.75
+Alice,,,KTLO,2025-11,0.1,0.75
+Alice,BA,P10,Finance Reporting Dashboard,2025-11,0.3,0.75
+Alice,BA,P12,Learning Management System Pilot,2025-11,0.35,0.75
+Alice,,,KTLO,2025-12,0.1,0.95
+Alice,BA,P13,Product Catalog Revamp,2025-12,0.4,0.95
+Alice,BA,P16,AI Knowledge Assistant Pilot,2025-12,0.45,0.95
+Alice,,,KTLO,2026-01,0.1,0.95
+Alice,BA,P13,Product Catalog Revamp,2026-01,0.4,0.95
+Alice,BA,P16,AI Knowledge Assistant Pilot,2026-01,0.45,0.95
+Alice,,,KTLO,2026-02,0.1,0.6333
+Alice,BA,P14,Vendor Risk Portal,2026-02,0.3,0.6333
+Alice,BA,P17,Legacy ERP Data Migration,2026-02,0.2333,0.6333
+Alice,,,KTLO,2026-03,0.1,0.9333
+Alice,BA,P14,Vendor Risk Portal,2026-03,0.3,0.9333
+Alice,BA,P17,Legacy ERP Data Migration,2026-03,0.5333,0.9333
+Alice,,,KTLO,2026-04,0.1,0.9333
+Alice,BA,P17,Legacy ERP Data Migration,2026-04,0.2333,0.9333
+Alice,BA,P20,Marketing Attribution Model,2026-04,0.6,0.9333
+Alice,,,KTLO,2026-05,0.1,0.7
+Alice,BA,P18,Team Collaboration Hub,2026-05,0.35,0.7
+Alice,BA,P19,Contract Renewal Tracker,2026-05,0.25,0.7
+Alice,,,KTLO,2026-06,0.1,0.7
+Alice,BA,P18,Team Collaboration Hub,2026-06,0.35,0.7
+Alice,BA,P19,Contract Renewal Tracker,2026-06,0.25,0.7
+Alice,,,KTLO,2026-07,0.1,0.1
+Alice,,,KTLO,2026-08,0.1,0.1
+Alice,,,KTLO,2026-09,0.1,0.1
+Alice,,,KTLO,2026-10,0.1,0.1
+Alice,,,KTLO,2026-11,0.1,0.1
+Alice,,,KTLO,2026-12,0.1,0.1
+Alice,,,KTLO,2027-01,0.1,0.1
+Bob,,,KTLO,2025-01,0.2,0.7
+Bob,Planner,P1,Billing Platform,2025-01,0.5,0.7
+Bob,,,KTLO,2025-02,0.2,0.7
+Bob,Planner,P1,Billing Platform,2025-02,0.5,0.7
+Bob,,,KTLO,2025-03,0.2,0.5
+Bob,Planner,P6,Procurement Workflow Tool,2025-03,0.3,0.5
+Bob,,,KTLO,2025-04,0.2,0.5
+Bob,Planner,P6,Procurement Workflow Tool,2025-04,0.3,0.5
+Bob,,,KTLO,2025-05,0.2,0.7
+Bob,BA,P8,Sales CRM Data Cleanse,2025-05,0.2,0.7
+Bob,Planner,P8,Sales CRM Data Cleanse,2025-05,0.3,0.7
+Bob,,,KTLO,2025-06,0.2,0.7
+Bob,BA,P8,Sales CRM Data Cleanse,2025-06,0.2,0.7
+Bob,Planner,P8,Sales CRM Data Cleanse,2025-06,0.3,0.7
+Bob,,,KTLO,2025-07,0.2,0.7
+Bob,Planner,P15,Customer Feedback Analyzer,2025-07,0.5,0.7
+Bob,,,KTLO,2025-08,0.2,0.7
+Bob,BA,P2,SSO Rollout,2025-08,0.5,0.7
+Bob,,,KTLO,2025-09,0.2,0.5
+Bob,BA,P9,Content Delivery Network Migration,2025-09,0.3,0.5
+Bob,,,KTLO,2025-10,0.2,0.55
+Bob,Planner,P10,Finance Reporting Dashboard,2025-10,0.35,0.55
+Bob,,,KTLO,2025-11,0.2,0.55
+Bob,Planner,P10,Finance Reporting Dashboard,2025-11,0.35,0.55
+Bob,,,KTLO,2025-12,0.2,0.7
+Bob,Planner,P13,Product Catalog Revamp,2025-12,0.5,0.7
+Bob,,,KTLO,2026-01,0.2,0.7
+Bob,Planner,P13,Product Catalog Revamp,2026-01,0.5,0.7
+Bob,,,KTLO,2026-02,0.2,0.6
+Bob,Planner,P14,Vendor Risk Portal,2026-02,0.4,0.6
+Bob,,,KTLO,2026-03,0.2,0.6
+Bob,Planner,P14,Vendor Risk Portal,2026-03,0.4,0.6
+Bob,,,KTLO,2026-04,0.2,0.7
+Bob,Planner,P20,Marketing Attribution Model,2026-04,0.5,0.7
+Bob,,,KTLO,2026-05,0.2,0.6
+Bob,Planner,P18,Team Collaboration Hub,2026-05,0.4,0.6
+Bob,,,KTLO,2026-06,0.2,0.6
+Bob,Planner,P18,Team Collaboration Hub,2026-06,0.4,0.6
+Bob,,,KTLO,2026-07,0.2,0.5
+Bob,BA,P21,IT Asset Inventory Overhaul,2026-07,0.3,0.5
+Bob,,,KTLO,2026-08,0.2,0.5
+Bob,BA,P21,IT Asset Inventory Overhaul,2026-08,0.3,0.5
+Bob,,,KTLO,2026-09,0.2,0.2
+Bob,,,KTLO,2026-10,0.2,0.2
+Bob,,,KTLO,2026-11,0.2,0.2
+Bob,,,KTLO,2026-12,0.2,0.2
+Bob,,,KTLO,2027-01,0.2,0.2
+Cara,,,KTLO,2025-01,0.15,1.0
+Cara,Dev,P1,Billing Platform,2025-01,0.85,1.0
+Cara,,,KTLO,2025-02,0.15,0.35
+Cara,Dev,P4,Incident Response Automation,2025-02,0.2,0.35
+Cara,,,KTLO,2025-03,0.15,0.95
+Cara,Dev,P11,Cloud Security Assessment,2025-03,0.8,0.95
+Cara,,,KTLO,2025-04,0.15,1.0
+Cara,Dev,P5,Subscription Billing Enhancements,2025-04,0.85,1.0
+Cara,,,KTLO,2025-05,0.15,0.15
+Cara,,,KTLO,2025-06,0.15,1.0
+Cara,Dev,P7,Partner API Integration,2025-06,0.85,1.0
+Cara,,,KTLO,2025-07,0.15,1.0
+Cara,Dev,P7,Partner API Integration,2025-07,0.85,1.0
+Cara,,,KTLO,2025-08,0.15,1.0
+Cara,Dev,P2,SSO Rollout,2025-08,0.85,1.0
+Cara,,,KTLO,2025-09,0.15,1.0
+Cara,Dev,P9,Content Delivery Network Migration,2025-09,0.85,1.0
+Cara,,,KTLO,2025-10,0.15,0.75
+Cara,Dev,P10,Finance Reporting Dashboard,2025-10,0.6,0.75
+Cara,,,KTLO,2025-11,0.15,0.75
+Cara,Dev,P10,Finance Reporting Dashboard,2025-11,0.6,0.75
+Cara,,,KTLO,2025-12,0.15,1.0
+Cara,Dev,P13,Product Catalog Revamp,2025-12,0.85,1.0
+Cara,,,KTLO,2026-01,0.15,0.5
+Cara,Dev,P16,AI Knowledge Assistant Pilot,2026-01,0.35,0.5
+Cara,,,KTLO,2026-02,0.15,0.15
+Cara,,,KTLO,2026-03,0.15,0.6867
+Cara,Dev,P17,Legacy ERP Data Migration,2026-03,0.5367,0.6867
+Cara,,,KTLO,2026-04,0.15,1.0
+Cara,Dev,P20,Marketing Attribution Model,2026-04,0.85,1.0
+Cara,,,KTLO,2026-05,0.15,0.9
+Cara,Dev,P18,Team Collaboration Hub,2026-05,0.75,0.9
+Cara,,,KTLO,2026-06,0.15,0.9
+Cara,Dev,P18,Team Collaboration Hub,2026-06,0.75,0.9
+Cara,,,KTLO,2026-07,0.15,0.85
+Cara,Dev,P21,IT Asset Inventory Overhaul,2026-07,0.7,0.85
+Cara,,,KTLO,2026-08,0.15,0.85
+Cara,Dev,P21,IT Asset Inventory Overhaul,2026-08,0.7,0.85
+Cara,,,KTLO,2026-09,0.15,0.15
+Cara,,,KTLO,2026-10,0.15,0.15
+Cara,,,KTLO,2026-11,0.15,0.15
+Cara,,,KTLO,2026-12,0.15,0.15
+Cara,,,KTLO,2027-01,0.15,0.15
+Iris,,,KTLO,2025-01,0.15,0.3
+Iris,Dev,P1,Billing Platform,2025-01,0.15,0.3
+Iris,,,KTLO,2025-02,0.15,0.15
+Iris,,,KTLO,2025-03,0.15,0.15
+Iris,,,KTLO,2025-04,0.15,0.55
+Iris,Dev,P5,Subscription Billing Enhancements,2025-04,0.4,0.55
+Iris,,,KTLO,2025-05,0.15,0.65
+Iris,Dev,P8,Sales CRM Data Cleanse,2025-05,0.5,0.65
+Iris,,,KTLO,2025-06,0.15,0.75
+Iris,Dev,P7,Partner API Integration,2025-06,0.1,0.75
+Iris,Dev,P8,Sales CRM Data Cleanse,2025-06,0.5,0.75
+Iris,,,KTLO,2025-07,0.15,0.25
+Iris,Dev,P7,Partner API Integration,2025-07,0.1,0.25
+Iris,,,KTLO,2025-08,0.15,0.3
+Iris,Dev,P2,SSO Rollout,2025-08,0.15,0.3
+Iris,,,KTLO,2025-09,0.15,1.0
+Iris,Dev,P9,Content Delivery Network Migration,2025-09,0.85,1.0
+Iris,,,KTLO,2025-10,0.15,0.9
+Iris,Dev,P12,Learning Management System Pilot,2025-10,0.75,0.9
+Iris,,,KTLO,2025-11,0.15,0.9
+Iris,Dev,P12,Learning Management System Pilot,2025-11,0.75,0.9
+Iris,,,KTLO,2025-12,0.15,0.45
+Iris,Dev,P13,Product Catalog Revamp,2025-12,0.3,0.45
+Iris,,,KTLO,2026-01,0.15,0.15
+Iris,,,KTLO,2026-02,0.15,0.15
+Iris,,,KTLO,2026-03,0.15,0.15
+Iris,,,KTLO,2026-04,0.15,0.6
+Iris,Dev,P20,Marketing Attribution Model,2026-04,0.45,0.6
+Iris,,,KTLO,2026-05,0.15,0.15
+Iris,,,KTLO,2026-06,0.15,0.15
+Iris,,,KTLO,2026-07,0.15,0.15
+Iris,,,KTLO,2026-08,0.15,0.15
+Iris,,,KTLO,2026-09,0.15,0.15
+Iris,,,KTLO,2026-10,0.15,0.15
+Iris,,,KTLO,2026-11,0.15,0.15
+Iris,,,KTLO,2026-12,0.15,0.15
+Iris,,,KTLO,2027-01,0.15,0.15
+Liam,,,KTLO,2025-01,0.15,1.0
+Liam,Dev,P4,Incident Response Automation,2025-01,0.85,1.0
+Liam,,,KTLO,2025-02,0.15,1.0
+Liam,Dev,P1,Billing Platform,2025-02,0.85,1.0
+Liam,,,KTLO,2025-03,0.15,0.7
+Liam,Dev,P6,Procurement Workflow Tool,2025-03,0.55,0.7
+Liam,,,KTLO,2025-04,0.15,0.7
+Liam,Dev,P6,Procurement Workflow Tool,2025-04,0.55,0.7
+Liam,,,KTLO,2025-05,0.15,1.0
+Liam,Dev,P5,Subscription Billing Enhancements,2025-05,0.85,1.0
+Liam,,,KTLO,2025-06,0.15,0.15
+Liam,,,KTLO,2025-07,0.15,1.0
+Liam,Dev,P15,Customer Feedback Analyzer,2025-07,0.85,1.0
+Liam,,,KTLO,2025-08,0.15,0.15
+Liam,,,KTLO,2025-09,0.15,0.15
+Liam,,,KTLO,2025-10,0.15,0.15
+Liam,,,KTLO,2025-11,0.15,0.15
+Liam,,,KTLO,2025-12,0.15,1.0
+Liam,Dev,P16,AI Knowledge Assistant Pilot,2025-12,0.85,1.0
+Liam,,,KTLO,2026-01,0.15,1.0
+Liam,Dev,P13,Product Catalog Revamp,2026-01,0.85,1.0
+Liam,,,KTLO,2026-02,0.15,0.75
+Liam,Dev,P14,Vendor Risk Portal,2026-02,0.6,0.75
+Liam,,,KTLO,2026-03,0.15,0.75
+Liam,Dev,P14,Vendor Risk Portal,2026-03,0.6,0.75
+Liam,,,KTLO,2026-04,0.15,0.15
+Liam,,,KTLO,2026-05,0.15,0.6
+Liam,Dev,P19,Contract Renewal Tracker,2026-05,0.45,0.6
+Liam,,,KTLO,2026-06,0.15,0.6
+Liam,Dev,P19,Contract Renewal Tracker,2026-06,0.45,0.6
+Liam,,,KTLO,2026-07,0.15,0.15
+Liam,,,KTLO,2026-08,0.15,0.15
+Liam,,,KTLO,2026-09,0.15,0.15
+Liam,,,KTLO,2026-10,0.15,0.15
+Liam,,,KTLO,2026-11,0.15,0.15
+Liam,,,KTLO,2026-12,0.15,0.15
+Liam,,,KTLO,2027-01,0.15,0.15
+Nora,,,KTLO,2025-01,0.2,0.55
+Nora,Planner,P4,Incident Response Automation,2025-01,0.35,0.55
+Nora,,,KTLO,2025-02,0.2,0.55
+Nora,Planner,P4,Incident Response Automation,2025-02,0.35,0.55
+Nora,,,KTLO,2025-03,0.2,0.6
+Nora,Planner,P11,Cloud Security Assessment,2025-03,0.4,0.6
+Nora,,,KTLO,2025-04,0.2,0.7
+Nora,Planner,P5,Subscription Billing Enhancements,2025-04,0.5,0.7
+Nora,,,KTLO,2025-05,0.2,0.7
+Nora,Planner,P5,Subscription Billing Enhancements,2025-05,0.5,0.7
+Nora,,,KTLO,2025-06,0.2,0.65
+Nora,Planner,P7,Partner API Integration,2025-06,0.45,0.65
+Nora,,,KTLO,2025-07,0.2,0.65
+Nora,Planner,P7,Partner API Integration,2025-07,0.45,0.65
+Nora,,,KTLO,2025-08,0.2,0.5
+Nora,Planner,P2,SSO Rollout,2025-08,0.3,0.5
+Nora,,,KTLO,2025-09,0.2,0.6
+Nora,Planner,P9,Content Delivery Network Migration,2025-09,0.4,0.6
+Nora,,,KTLO,2025-10,0.2,0.5
+Nora,Planner,P12,Learning Management System Pilot,2025-10,0.3,0.5
+Nora,,,KTLO,2025-11,0.2,0.5
+Nora,Planner,P12,Learning Management System Pilot,2025-11,0.3,0.5
+Nora,,,KTLO,2025-12,0.2,0.5
+Nora,Planner,P16,AI Knowledge Assistant Pilot,2025-12,0.3,0.5
+Nora,,,KTLO,2026-01,0.2,0.5
+Nora,Planner,P16,AI Knowledge Assistant Pilot,2026-01,0.3,0.5
+Nora,,,KTLO,2026-02,0.2,0.6
+Nora,Planner,P17,Legacy ERP Data Migration,2026-02,0.4,0.6
+Nora,,,KTLO,2026-03,0.2,0.6
+Nora,Planner,P17,Legacy ERP Data Migration,2026-03,0.4,0.6
+Nora,,,KTLO,2026-04,0.2,0.6
+Nora,Planner,P17,Legacy ERP Data Migration,2026-04,0.4,0.6
+Nora,,,KTLO,2026-05,0.2,0.55
+Nora,Planner,P19,Contract Renewal Tracker,2026-05,0.35,0.55
+Nora,,,KTLO,2026-06,0.2,0.55
+Nora,Planner,P19,Contract Renewal Tracker,2026-06,0.35,0.55
+Nora,,,KTLO,2026-07,0.2,0.6
+Nora,Planner,P21,IT Asset Inventory Overhaul,2026-07,0.4,0.6
+Nora,,,KTLO,2026-08,0.2,0.6
+Nora,Planner,P21,IT Asset Inventory Overhaul,2026-08,0.4,0.6
+Nora,,,KTLO,2026-09,0.2,0.2
+Nora,,,KTLO,2026-10,0.2,0.2
+Nora,,,KTLO,2026-11,0.2,0.2
+Nora,,,KTLO,2026-12,0.2,0.2
+Nora,,,KTLO,2027-01,0.2,0.2
+Omar,,,KTLO,2025-01,0.15,0.2
+Omar,Dev,P4,Incident Response Automation,2025-01,0.05,0.2
+Omar,,,KTLO,2025-02,0.15,1.0
+Omar,Dev,P1,Billing Platform,2025-02,0.15,1.0
+Omar,Dev,P4,Incident Response Automation,2025-02,0.7,1.0
+Omar,,,KTLO,2025-03,0.15,0.15
+Omar,,,KTLO,2025-04,0.15,0.15
+Omar,,,KTLO,2025-05,0.15,0.55
+Omar,Dev,P5,Subscription Billing Enhancements,2025-05,0.4,0.55
+Omar,,,KTLO,2025-06,0.15,0.15
+Omar,,,KTLO,2025-07,0.15,0.3
+Omar,Dev,P15,Customer Feedback Analyzer,2025-07,0.15,0.3
+Omar,,,KTLO,2025-08,0.15,0.15
+Omar,,,KTLO,2025-09,0.15,0.15
+Omar,,,KTLO,2025-10,0.15,0.15
+Omar,,,KTLO,2025-11,0.15,0.15
+Omar,,,KTLO,2025-12,0.15,0.2
+Omar,Dev,P16,AI Knowledge Assistant Pilot,2025-12,0.05,0.2
+Omar,,,KTLO,2026-01,0.15,1.0
+Omar,Dev,P13,Product Catalog Revamp,2026-01,0.3,1.0
+Omar,Dev,P16,AI Knowledge Assistant Pilot,2026-01,0.55,1.0
+Omar,,,KTLO,2026-02,0.15,0.7567
+Omar,Dev,P17,Legacy ERP Data Migration,2026-02,0.6067,0.7567
+Omar,,,KTLO,2026-03,0.15,1.0
+Omar,Dev,P17,Legacy ERP Data Migration,2026-03,0.85,1.0
+Omar,,,KTLO,2026-04,0.15,0.7567
+Omar,Dev,P17,Legacy ERP Data Migration,2026-04,0.6067,0.7567
+Omar,,,KTLO,2026-05,0.15,0.15
+Omar,,,KTLO,2026-06,0.15,0.15
+Omar,,,KTLO,2026-07,0.15,0.15
+Omar,,,KTLO,2026-08,0.15,0.15
+Omar,,,KTLO,2026-09,0.15,0.15
+Omar,,,KTLO,2026-10,0.15,0.15
+Omar,,,KTLO,2026-11,0.15,0.15
+Omar,,,KTLO,2026-12,0.15,0.15
+Omar,,,KTLO,2027-01,0.15,0.15
