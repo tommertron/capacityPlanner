@@ -1,0 +1,16 @@
+id,name,parent_summary,start_month,end_month,duration_months,ba_persons,planner_persons,dev_persons,effort_ba_pm,effort_planner_pm,effort_dev_pm,priority,input_row
+IT-146,Financial System Automation,Operational Efficiency Program,2025-11,2025-11,1,,,Cameron,0.0,0.0,0.5,1,1
+IT-116,Third-Party Integration Hub,Channel Growth Initiative,2025-11,2026-03,5,Riley,Brittany,Dylan;James,2.0,1.0,3.0,2,2
+IT-125,Service Catalog Redesign,Product Strategy Initiative,2025-11,2026-10,12,BA2;Cameron;Riley,David;Riley,James;Marcus,5.0,2.0,8.0,3,3
+IT-35,Database Redundancy Setup,Infrastructure Modernization,2025-11,2025-12,2,,,Dylan;Marcus,0.0,0.0,2.0,4,4
+IT-140,Master Data Cleanup,Cost Optimization Program,2026-02,2026-02,1,,,Dev1;Dev2,0.0,0.0,1.0,5,5
+IT-123,User Experience Platform,Product Strategy Initiative,2025-11,2026-10,12,BA2;Cameron;Katherine;Riley,David;Riley,Dev1;Dev2;James;Marcus,5.0,2.0,8.0,6,6
+IT-32,Configuration Management Tool,Product Strategy Initiative,2025-11,2026-08,10,,David,Dylan;James;Marcus,0.0,2.0,1.0,7,7
+IT-141,Compliance Monitoring System,Operational Efficiency Program,2026-06,2026-11,6,BA2;Katherine,Brittany,Dev2,3.0,1.0,2.0,9,9
+IT-80,Legacy System Integration,Operational Efficiency Program,2026-06,2027-01,8,Katherine,Brittany,Marcus,1.0,1.5,2.0,10,10
+IT-26,Workflow Automation Project,Operational Efficiency Program,2025-11,2026-03,5,,Brittany,,0.0,1.0,0.0,11,11
+IT-126,Omnichannel Platform,Product Strategy Initiative,2026-08,2026-12,5,Katherine,Brittany,Dev1;Dylan,1.0,1.0,2.0,12,12
+IT-77,API Governance Framework,Infrastructure Modernization,2026-02,2026-11,10,,Brittany,Dev2,0.0,2.0,1.0,13,13
+IT-103,Testing Tool Migration,Infrastructure Modernization,2026-03,2026-03,1,,,Dev1;Dev2,0.0,0.0,1.0,14,14
+IT-144,Messaging Service Upgrade,Infrastructure Modernization,2026-02,2026-04,3,,David,Dev2;Dylan,0.0,0.5,1.5,15,15
+IT-143,ETL Pipeline Enhancement,Infrastructure Modernization,2026-11,2026-11,1,BA2,,Dylan;James,0.5,0.0,1.5,16,16

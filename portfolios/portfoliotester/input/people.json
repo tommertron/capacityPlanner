@@ -1,0 +1,140 @@
+[
+  {
+    "person": "Katherine",
+    "roles": [
+      "BA"
+    ],
+    "active": true,
+    "start_date": "2026-04-01",
+    "skillsets": [
+      "business-analysis",
+      "billing-systems"
+    ],
+    "preferred_parent_summaries": [],
+    "notes": ""
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "David",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Planner"
+    ],
+    "skillsets": []
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Brittany",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Planner"
+    ],
+    "skillsets": []
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "James",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "front-end",
+      "back-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Dylan",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "back-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Marcus",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "back-end"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Dev1",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "back-end",
+      "front-end"
+    ],
+    "start_date": "2026-02-01"
+  },
+  {
+    "active": true,
+    "end_date": "2026-02-07",
+    "notes": "",
+    "person": "Cameron",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "BA",
+      "Dev"
+    ],
+    "skillsets": [
+      "billing-systems"
+    ]
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "Dev2",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "Dev"
+    ],
+    "skillsets": [
+      "front-end",
+      "back-end"
+    ],
+    "start_date": "2026-02-01"
+  },
+  {
+    "active": true,
+    "notes": "",
+    "person": "BA2",
+    "preferred_parent_summaries": [],
+    "roles": [
+      "BA"
+    ],
+    "skillsets": [],
+    "start_date": "2026-02-01"
+  },
+  {
+    "active": true,
+    "end_date": "2026-04-01",
+    "notes": "",
+    "person": "Riley",
+    "preferred_parent_summaries": [
+      "Product Strategy Initiative"
+    ],
+    "roles": [
+      "BA",
+      "Planner"
+    ],
+    "skillsets": []
+  }
+]

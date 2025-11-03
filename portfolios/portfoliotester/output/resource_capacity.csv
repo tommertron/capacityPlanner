@@ -1,0 +1,366 @@
+person,role,project_id,project_name,month,project_alloc_pct,total_pct
+BA2,,,KTLO,2026-02,0.15,0.15
+BA2,,,KTLO,2026-03,0.15,0.65
+BA2,BA,IT-123,User Experience Platform,2026-03,0.5,0.65
+BA2,,,KTLO,2026-04,0.15,0.9833
+BA2,BA,IT-123,User Experience Platform,2026-04,0.8333,0.9833
+BA2,,,KTLO,2026-05,0.15,1.0
+BA2,BA,IT-123,User Experience Platform,2026-05,0.0167,1.0
+BA2,BA,IT-125,Service Catalog Redesign,2026-05,0.8333,1.0
+BA2,,,KTLO,2026-06,0.15,0.9
+BA2,BA,IT-125,Service Catalog Redesign,2026-06,0.5,0.9
+BA2,BA,IT-141,Compliance Monitoring System,2026-06,0.25,0.9
+BA2,,,KTLO,2026-07,0.15,1.0
+BA2,BA,IT-125,Service Catalog Redesign,2026-07,0.4167,1.0
+BA2,BA,IT-141,Compliance Monitoring System,2026-07,0.4333,1.0
+BA2,,,KTLO,2026-08,0.15,1.0
+BA2,BA,IT-125,Service Catalog Redesign,2026-08,0.3333,1.0
+BA2,BA,IT-141,Compliance Monitoring System,2026-08,0.5167,1.0
+BA2,,,KTLO,2026-09,0.15,1.0
+BA2,BA,IT-125,Service Catalog Redesign,2026-09,0.2083,1.0
+BA2,BA,IT-141,Compliance Monitoring System,2026-09,0.6417,1.0
+BA2,,,KTLO,2026-10,0.15,0.8083
+BA2,BA,IT-125,Service Catalog Redesign,2026-10,0.2083,0.8083
+BA2,BA,IT-141,Compliance Monitoring System,2026-10,0.45,0.8083
+BA2,,,KTLO,2026-11,0.15,0.9
+BA2,BA,IT-141,Compliance Monitoring System,2026-11,0.25,0.9
+BA2,BA,IT-143,ETL Pipeline Enhancement,2026-11,0.5,0.9
+BA2,,,KTLO,2026-12,0.15,0.15
+BA2,,,KTLO,2027-01,0.15,0.15
+BA2,,,KTLO,2027-02,0.15,0.15
+Brittany,,,KTLO,2025-11,0.15,0.55
+Brittany,Planner,IT-116,Third-Party Integration Hub,2025-11,0.2,0.55
+Brittany,Planner,IT-26,Workflow Automation Project,2025-11,0.2,0.55
+Brittany,,,KTLO,2025-12,0.15,0.55
+Brittany,Planner,IT-116,Third-Party Integration Hub,2025-12,0.2,0.55
+Brittany,Planner,IT-26,Workflow Automation Project,2025-12,0.2,0.55
+Brittany,,,KTLO,2026-01,0.15,0.55
+Brittany,Planner,IT-116,Third-Party Integration Hub,2026-01,0.2,0.55
+Brittany,Planner,IT-26,Workflow Automation Project,2026-01,0.2,0.55
+Brittany,,,KTLO,2026-02,0.15,0.75
+Brittany,Planner,IT-116,Third-Party Integration Hub,2026-02,0.2,0.75
+Brittany,Planner,IT-26,Workflow Automation Project,2026-02,0.2,0.75
+Brittany,Planner,IT-77,API Governance Framework,2026-02,0.2,0.75
+Brittany,,,KTLO,2026-03,0.15,0.75
+Brittany,Planner,IT-116,Third-Party Integration Hub,2026-03,0.2,0.75
+Brittany,Planner,IT-26,Workflow Automation Project,2026-03,0.2,0.75
+Brittany,Planner,IT-77,API Governance Framework,2026-03,0.2,0.75
+Brittany,,,KTLO,2026-04,0.15,0.35
+Brittany,Planner,IT-77,API Governance Framework,2026-04,0.2,0.35
+Brittany,,,KTLO,2026-05,0.15,0.35
+Brittany,Planner,IT-77,API Governance Framework,2026-05,0.2,0.35
+Brittany,,,KTLO,2026-06,0.15,0.7042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-06,0.1667,0.7042
+Brittany,Planner,IT-77,API Governance Framework,2026-06,0.2,0.7042
+Brittany,Planner,IT-80,Legacy System Integration,2026-06,0.1875,0.7042
+Brittany,,,KTLO,2026-07,0.15,0.7042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-07,0.1667,0.7042
+Brittany,Planner,IT-77,API Governance Framework,2026-07,0.2,0.7042
+Brittany,Planner,IT-80,Legacy System Integration,2026-07,0.1875,0.7042
+Brittany,,,KTLO,2026-08,0.15,0.9042
+Brittany,Planner,IT-126,Omnichannel Platform,2026-08,0.2,0.9042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-08,0.1667,0.9042
+Brittany,Planner,IT-77,API Governance Framework,2026-08,0.2,0.9042
+Brittany,Planner,IT-80,Legacy System Integration,2026-08,0.1875,0.9042
+Brittany,,,KTLO,2026-09,0.15,0.9042
+Brittany,Planner,IT-126,Omnichannel Platform,2026-09,0.2,0.9042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-09,0.1667,0.9042
+Brittany,Planner,IT-77,API Governance Framework,2026-09,0.2,0.9042
+Brittany,Planner,IT-80,Legacy System Integration,2026-09,0.1875,0.9042
+Brittany,,,KTLO,2026-10,0.15,0.9042
+Brittany,Planner,IT-126,Omnichannel Platform,2026-10,0.2,0.9042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-10,0.1667,0.9042
+Brittany,Planner,IT-77,API Governance Framework,2026-10,0.2,0.9042
+Brittany,Planner,IT-80,Legacy System Integration,2026-10,0.1875,0.9042
+Brittany,,,KTLO,2026-11,0.15,0.9042
+Brittany,Planner,IT-126,Omnichannel Platform,2026-11,0.2,0.9042
+Brittany,Planner,IT-141,Compliance Monitoring System,2026-11,0.1667,0.9042
+Brittany,Planner,IT-77,API Governance Framework,2026-11,0.2,0.9042
+Brittany,Planner,IT-80,Legacy System Integration,2026-11,0.1875,0.9042
+Brittany,,,KTLO,2026-12,0.15,0.5375
+Brittany,Planner,IT-126,Omnichannel Platform,2026-12,0.2,0.5375
+Brittany,Planner,IT-80,Legacy System Integration,2026-12,0.1875,0.5375
+Brittany,,,KTLO,2027-01,0.15,0.3375
+Brittany,Planner,IT-80,Legacy System Integration,2027-01,0.1875,0.3375
+Brittany,,,KTLO,2027-02,0.15,0.15
+Cameron,,,KTLO,2025-11,0.2,0.7
+Cameron,Dev,IT-146,Financial System Automation,2025-11,0.5,0.7
+Cameron,,,KTLO,2025-12,0.2,0.3333
+Cameron,BA,IT-123,User Experience Platform,2025-12,0.1333,0.3333
+Cameron,,,KTLO,2026-01,0.2,0.8167
+Cameron,BA,IT-123,User Experience Platform,2026-01,0.3333,0.8167
+Cameron,BA,IT-125,Service Catalog Redesign,2026-01,0.2833,0.8167
+Cameron,,,KTLO,2026-02,0.2,0.6167
+Cameron,BA,IT-123,User Experience Platform,2026-02,0.4167,0.6167
+David,,,KTLO,2025-11,0.15,0.45
+David,Planner,IT-123,User Experience Platform,2025-11,0.1,0.45
+David,Planner,IT-32,Configuration Management Tool,2025-11,0.2,0.45
+David,,,KTLO,2025-12,0.15,0.5167
+David,Planner,IT-123,User Experience Platform,2025-12,0.1667,0.5167
+David,Planner,IT-32,Configuration Management Tool,2025-12,0.2,0.5167
+David,,,KTLO,2026-01,0.15,0.6833
+David,Planner,IT-123,User Experience Platform,2026-01,0.1667,0.6833
+David,Planner,IT-125,Service Catalog Redesign,2026-01,0.1667,0.6833
+David,Planner,IT-32,Configuration Management Tool,2026-01,0.2,0.6833
+David,,,KTLO,2026-02,0.15,0.8167
+David,Planner,IT-123,User Experience Platform,2026-02,0.1667,0.8167
+David,Planner,IT-125,Service Catalog Redesign,2026-02,0.1333,0.8167
+David,Planner,IT-144,Messaging Service Upgrade,2026-02,0.1667,0.8167
+David,Planner,IT-32,Configuration Management Tool,2026-02,0.2,0.8167
+David,,,KTLO,2026-03,0.15,0.7
+David,Planner,IT-123,User Experience Platform,2026-03,0.1667,0.7
+David,Planner,IT-125,Service Catalog Redesign,2026-03,0.0167,0.7
+David,Planner,IT-144,Messaging Service Upgrade,2026-03,0.1667,0.7
+David,Planner,IT-32,Configuration Management Tool,2026-03,0.2,0.7
+David,,,KTLO,2026-04,0.15,0.8333
+David,Planner,IT-123,User Experience Platform,2026-04,0.1667,0.8333
+David,Planner,IT-125,Service Catalog Redesign,2026-04,0.15,0.8333
+David,Planner,IT-144,Messaging Service Upgrade,2026-04,0.1667,0.8333
+David,Planner,IT-32,Configuration Management Tool,2026-04,0.2,0.8333
+David,,,KTLO,2026-05,0.15,0.6833
+David,Planner,IT-123,User Experience Platform,2026-05,0.1667,0.6833
+David,Planner,IT-125,Service Catalog Redesign,2026-05,0.1667,0.6833
+David,Planner,IT-32,Configuration Management Tool,2026-05,0.2,0.6833
+David,,,KTLO,2026-06,0.15,0.6833
+David,Planner,IT-123,User Experience Platform,2026-06,0.1667,0.6833
+David,Planner,IT-125,Service Catalog Redesign,2026-06,0.1667,0.6833
+David,Planner,IT-32,Configuration Management Tool,2026-06,0.2,0.6833
+David,,,KTLO,2026-07,0.15,0.6833
+David,Planner,IT-123,User Experience Platform,2026-07,0.1667,0.6833
+David,Planner,IT-125,Service Catalog Redesign,2026-07,0.1667,0.6833
+David,Planner,IT-32,Configuration Management Tool,2026-07,0.2,0.6833
+David,,,KTLO,2026-08,0.15,0.6833
+David,Planner,IT-123,User Experience Platform,2026-08,0.1667,0.6833
+David,Planner,IT-125,Service Catalog Redesign,2026-08,0.1667,0.6833
+David,Planner,IT-32,Configuration Management Tool,2026-08,0.2,0.6833
+David,,,KTLO,2026-09,0.15,0.4833
+David,Planner,IT-123,User Experience Platform,2026-09,0.1667,0.4833
+David,Planner,IT-125,Service Catalog Redesign,2026-09,0.1667,0.4833
+David,,,KTLO,2026-10,0.15,0.4833
+David,Planner,IT-123,User Experience Platform,2026-10,0.1667,0.4833
+David,Planner,IT-125,Service Catalog Redesign,2026-10,0.1667,0.4833
+David,,,KTLO,2026-11,0.15,0.15
+David,,,KTLO,2026-12,0.15,0.15
+David,,,KTLO,2027-01,0.15,0.15
+David,,,KTLO,2027-02,0.15,0.15
+Dev1,,,KTLO,2026-02,0.2,1.0
+Dev1,Dev,IT-140,Master Data Cleanup,2026-02,0.8,1.0
+Dev1,,,KTLO,2026-03,0.2,1.0
+Dev1,Dev,IT-103,Testing Tool Migration,2026-03,0.8,1.0
+Dev1,,,KTLO,2026-04,0.2,1.0
+Dev1,Dev,IT-123,User Experience Platform,2026-04,0.8,1.0
+Dev1,,,KTLO,2026-05,0.2,1.0
+Dev1,Dev,IT-123,User Experience Platform,2026-05,0.8,1.0
+Dev1,,,KTLO,2026-06,0.2,1.0
+Dev1,Dev,IT-123,User Experience Platform,2026-06,0.8,1.0
+Dev1,,,KTLO,2026-07,0.2,0.8667
+Dev1,Dev,IT-123,User Experience Platform,2026-07,0.6667,0.8667
+Dev1,,,KTLO,2026-08,0.2,0.7333
+Dev1,Dev,IT-123,User Experience Platform,2026-08,0.5333,0.7333
+Dev1,,,KTLO,2026-09,0.2,0.9333
+Dev1,Dev,IT-123,User Experience Platform,2026-09,0.3333,0.9333
+Dev1,Dev,IT-126,Omnichannel Platform,2026-09,0.4,0.9333
+Dev1,,,KTLO,2026-10,0.2,0.5333
+Dev1,Dev,IT-123,User Experience Platform,2026-10,0.3333,0.5333
+Dev1,,,KTLO,2026-11,0.2,0.6
+Dev1,Dev,IT-126,Omnichannel Platform,2026-11,0.4,0.6
+Dev1,,,KTLO,2026-12,0.2,0.4
+Dev1,Dev,IT-126,Omnichannel Platform,2026-12,0.2,0.4
+Dev1,,,KTLO,2027-01,0.2,0.2
+Dev1,,,KTLO,2027-02,0.2,0.2
+Dev2,,,KTLO,2026-02,0.2,0.95
+Dev2,Dev,IT-140,Master Data Cleanup,2026-02,0.2,0.95
+Dev2,Dev,IT-144,Messaging Service Upgrade,2026-02,0.5,0.95
+Dev2,Dev,IT-77,API Governance Framework,2026-02,0.05,0.95
+Dev2,,,KTLO,2026-03,0.2,0.95
+Dev2,Dev,IT-103,Testing Tool Migration,2026-03,0.2,0.95
+Dev2,Dev,IT-144,Messaging Service Upgrade,2026-03,0.5,0.95
+Dev2,Dev,IT-77,API Governance Framework,2026-03,0.05,0.95
+Dev2,,,KTLO,2026-04,0.2,1.0
+Dev2,Dev,IT-123,User Experience Platform,2026-04,0.2667,1.0
+Dev2,Dev,IT-144,Messaging Service Upgrade,2026-04,0.4333,1.0
+Dev2,Dev,IT-77,API Governance Framework,2026-04,0.1,1.0
+Dev2,,,KTLO,2026-05,0.2,0.8333
+Dev2,Dev,IT-123,User Experience Platform,2026-05,0.5333,0.8333
+Dev2,Dev,IT-77,API Governance Framework,2026-05,0.1,0.8333
+Dev2,,,KTLO,2026-06,0.2,0.5667
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-06,0.1667,0.5667
+Dev2,Dev,IT-77,API Governance Framework,2026-06,0.2,0.5667
+Dev2,,,KTLO,2026-07,0.2,0.7
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-07,0.3,0.7
+Dev2,Dev,IT-77,API Governance Framework,2026-07,0.2,0.7
+Dev2,,,KTLO,2026-08,0.2,0.8333
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-08,0.5333,0.8333
+Dev2,Dev,IT-77,API Governance Framework,2026-08,0.1,0.8333
+Dev2,,,KTLO,2026-09,0.2,0.8333
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-09,0.5333,0.8333
+Dev2,Dev,IT-77,API Governance Framework,2026-09,0.1,0.8333
+Dev2,,,KTLO,2026-10,0.2,0.55
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-10,0.3,0.55
+Dev2,Dev,IT-77,API Governance Framework,2026-10,0.05,0.55
+Dev2,,,KTLO,2026-11,0.2,0.4167
+Dev2,Dev,IT-141,Compliance Monitoring System,2026-11,0.1667,0.4167
+Dev2,Dev,IT-77,API Governance Framework,2026-11,0.05,0.4167
+Dev2,,,KTLO,2026-12,0.2,0.2
+Dev2,,,KTLO,2027-01,0.2,0.2
+Dev2,,,KTLO,2027-02,0.2,0.2
+Dylan,,,KTLO,2025-11,0.2,0.75
+Dylan,Dev,IT-116,Third-Party Integration Hub,2025-11,0.3,0.75
+Dylan,Dev,IT-32,Configuration Management Tool,2025-11,0.05,0.75
+Dylan,Dev,IT-35,Database Redundancy Setup,2025-11,0.2,0.75
+Dylan,,,KTLO,2025-12,0.2,1.0
+Dylan,Dev,IT-116,Third-Party Integration Hub,2025-12,0.6,1.0
+Dylan,Dev,IT-35,Database Redundancy Setup,2025-12,0.2,1.0
+Dylan,,,KTLO,2026-01,0.2,1.0
+Dylan,Dev,IT-116,Third-Party Integration Hub,2026-01,0.8,1.0
+Dylan,,,KTLO,2026-02,0.2,0.9
+Dylan,Dev,IT-116,Third-Party Integration Hub,2026-02,0.6,0.9
+Dylan,Dev,IT-32,Configuration Management Tool,2026-02,0.1,0.9
+Dylan,,,KTLO,2026-03,0.2,0.7
+Dylan,Dev,IT-116,Third-Party Integration Hub,2026-03,0.3,0.7
+Dylan,Dev,IT-32,Configuration Management Tool,2026-03,0.2,0.7
+Dylan,,,KTLO,2026-04,0.2,0.4667
+Dylan,Dev,IT-144,Messaging Service Upgrade,2026-04,0.0667,0.4667
+Dylan,Dev,IT-32,Configuration Management Tool,2026-04,0.2,0.4667
+Dylan,,,KTLO,2026-05,0.2,0.3
+Dylan,Dev,IT-32,Configuration Management Tool,2026-05,0.1,0.3
+Dylan,,,KTLO,2026-06,0.2,0.3
+Dylan,Dev,IT-32,Configuration Management Tool,2026-06,0.1,0.3
+Dylan,,,KTLO,2026-07,0.2,0.25
+Dylan,Dev,IT-32,Configuration Management Tool,2026-07,0.05,0.25
+Dylan,,,KTLO,2026-08,0.2,0.45
+Dylan,Dev,IT-126,Omnichannel Platform,2026-08,0.2,0.45
+Dylan,Dev,IT-32,Configuration Management Tool,2026-08,0.05,0.45
+Dylan,,,KTLO,2026-09,0.2,0.2
+Dylan,,,KTLO,2026-10,0.2,1.0
+Dylan,Dev,IT-126,Omnichannel Platform,2026-10,0.8,1.0
+Dylan,,,KTLO,2026-11,0.2,1.0
+Dylan,Dev,IT-143,ETL Pipeline Enhancement,2026-11,0.8,1.0
+Dylan,,,KTLO,2026-12,0.2,0.2
+Dylan,,,KTLO,2027-01,0.2,0.2
+Dylan,,,KTLO,2027-02,0.2,0.2
+James,,,KTLO,2025-11,0.2,0.8667
+James,Dev,IT-123,User Experience Platform,2025-11,0.3333,0.8667
+James,Dev,IT-125,Service Catalog Redesign,2025-11,0.3333,0.8667
+James,,,KTLO,2025-12,0.2,0.9167
+James,Dev,IT-123,User Experience Platform,2025-12,0.3333,0.9167
+James,Dev,IT-125,Service Catalog Redesign,2025-12,0.3333,0.9167
+James,Dev,IT-32,Configuration Management Tool,2025-12,0.05,0.9167
+James,,,KTLO,2026-01,0.2,1.0
+James,Dev,IT-116,Third-Party Integration Hub,2026-01,0.4,1.0
+James,Dev,IT-125,Service Catalog Redesign,2026-01,0.4,1.0
+James,,,KTLO,2026-02,0.2,0.8667
+James,Dev,IT-125,Service Catalog Redesign,2026-02,0.6667,0.8667
+James,,,KTLO,2026-03,0.2,1.0
+James,Dev,IT-125,Service Catalog Redesign,2026-03,0.8,1.0
+James,,,KTLO,2026-04,0.2,1.0
+James,Dev,IT-125,Service Catalog Redesign,2026-04,0.8,1.0
+James,,,KTLO,2026-05,0.2,1.0
+James,Dev,IT-125,Service Catalog Redesign,2026-05,0.8,1.0
+James,,,KTLO,2026-06,0.2,1.0
+James,Dev,IT-125,Service Catalog Redesign,2026-06,0.8,1.0
+James,,,KTLO,2026-07,0.2,0.8667
+James,Dev,IT-125,Service Catalog Redesign,2026-07,0.6667,0.8667
+James,,,KTLO,2026-08,0.2,0.7333
+James,Dev,IT-125,Service Catalog Redesign,2026-08,0.5333,0.7333
+James,,,KTLO,2026-09,0.2,0.5333
+James,Dev,IT-125,Service Catalog Redesign,2026-09,0.3333,0.5333
+James,,,KTLO,2026-10,0.2,0.5333
+James,Dev,IT-125,Service Catalog Redesign,2026-10,0.3333,0.5333
+James,,,KTLO,2026-11,0.2,0.9
+James,Dev,IT-143,ETL Pipeline Enhancement,2026-11,0.7,0.9
+James,,,KTLO,2026-12,0.2,0.2
+James,,,KTLO,2027-01,0.2,0.2
+James,,,KTLO,2027-02,0.2,0.2
+Katherine,,,KTLO,2026-04,0.15,0.15
+Katherine,,,KTLO,2026-05,0.15,0.9667
+Katherine,BA,IT-123,User Experience Platform,2026-05,0.8167,0.9667
+Katherine,,,KTLO,2026-06,0.15,0.7125
+Katherine,BA,IT-123,User Experience Platform,2026-06,0.5,0.7125
+Katherine,BA,IT-80,Legacy System Integration,2026-06,0.0625,0.7125
+Katherine,,,KTLO,2026-07,0.15,0.6708
+Katherine,BA,IT-123,User Experience Platform,2026-07,0.4167,0.6708
+Katherine,BA,IT-141,Compliance Monitoring System,2026-07,0.0167,0.6708
+Katherine,BA,IT-80,Legacy System Integration,2026-07,0.0875,0.6708
+Katherine,,,KTLO,2026-08,0.15,0.9917
+Katherine,BA,IT-123,User Experience Platform,2026-08,0.3333,0.9917
+Katherine,BA,IT-126,Omnichannel Platform,2026-08,0.1,0.9917
+Katherine,BA,IT-141,Compliance Monitoring System,2026-08,0.2833,0.9917
+Katherine,BA,IT-80,Legacy System Integration,2026-08,0.125,0.9917
+Katherine,,,KTLO,2026-09,0.15,0.9417
+Katherine,BA,IT-123,User Experience Platform,2026-09,0.2083,0.9417
+Katherine,BA,IT-126,Omnichannel Platform,2026-09,0.2,0.9417
+Katherine,BA,IT-141,Compliance Monitoring System,2026-09,0.1583,0.9417
+Katherine,BA,IT-80,Legacy System Integration,2026-09,0.225,0.9417
+Katherine,,,KTLO,2026-10,0.15,0.9833
+Katherine,BA,IT-123,User Experience Platform,2026-10,0.2083,0.9833
+Katherine,BA,IT-126,Omnichannel Platform,2026-10,0.4,0.9833
+Katherine,BA,IT-80,Legacy System Integration,2026-10,0.225,0.9833
+Katherine,,,KTLO,2026-11,0.15,0.475
+Katherine,BA,IT-126,Omnichannel Platform,2026-11,0.2,0.475
+Katherine,BA,IT-80,Legacy System Integration,2026-11,0.125,0.475
+Katherine,,,KTLO,2026-12,0.15,0.3375
+Katherine,BA,IT-126,Omnichannel Platform,2026-12,0.1,0.3375
+Katherine,BA,IT-80,Legacy System Integration,2026-12,0.0875,0.3375
+Katherine,,,KTLO,2027-01,0.15,0.2125
+Katherine,BA,IT-80,Legacy System Integration,2027-01,0.0625,0.2125
+Katherine,,,KTLO,2027-02,0.15,0.15
+Marcus,,,KTLO,2025-11,0.2,1.0
+Marcus,Dev,IT-35,Database Redundancy Setup,2025-11,0.8,1.0
+Marcus,,,KTLO,2025-12,0.2,1.0
+Marcus,Dev,IT-35,Database Redundancy Setup,2025-12,0.8,1.0
+Marcus,,,KTLO,2026-01,0.2,0.9667
+Marcus,Dev,IT-123,User Experience Platform,2026-01,0.5333,0.9667
+Marcus,Dev,IT-125,Service Catalog Redesign,2026-01,0.1333,0.9667
+Marcus,Dev,IT-32,Configuration Management Tool,2026-01,0.1,0.9667
+Marcus,,,KTLO,2026-02,0.2,0.8667
+Marcus,Dev,IT-123,User Experience Platform,2026-02,0.6667,0.8667
+Marcus,,,KTLO,2026-03,0.2,1.0
+Marcus,Dev,IT-123,User Experience Platform,2026-03,0.8,1.0
+Marcus,,,KTLO,2026-04,0.2,1.0
+Marcus,Dev,IT-123,User Experience Platform,2026-04,0.2667,1.0
+Marcus,Dev,IT-125,Service Catalog Redesign,2026-04,0.5333,1.0
+Marcus,,,KTLO,2026-05,0.2,0.7333
+Marcus,Dev,IT-125,Service Catalog Redesign,2026-05,0.5333,0.7333
+Marcus,,,KTLO,2026-06,0.2,0.325
+Marcus,Dev,IT-80,Legacy System Integration,2026-06,0.125,0.325
+Marcus,,,KTLO,2026-07,0.2,0.375
+Marcus,Dev,IT-80,Legacy System Integration,2026-07,0.175,0.375
+Marcus,,,KTLO,2026-08,0.2,0.45
+Marcus,Dev,IT-80,Legacy System Integration,2026-08,0.25,0.45
+Marcus,,,KTLO,2026-09,0.2,0.65
+Marcus,Dev,IT-80,Legacy System Integration,2026-09,0.45,0.65
+Marcus,,,KTLO,2026-10,0.2,0.65
+Marcus,Dev,IT-80,Legacy System Integration,2026-10,0.45,0.65
+Marcus,,,KTLO,2026-11,0.2,0.45
+Marcus,Dev,IT-80,Legacy System Integration,2026-11,0.25,0.45
+Marcus,,,KTLO,2026-12,0.2,0.375
+Marcus,Dev,IT-80,Legacy System Integration,2026-12,0.175,0.375
+Marcus,,,KTLO,2027-01,0.2,0.325
+Marcus,Dev,IT-80,Legacy System Integration,2027-01,0.125,0.325
+Marcus,,,KTLO,2027-02,0.2,0.2
+Riley,,,KTLO,2025-11,0.15,1.0
+Riley,BA,IT-116,Third-Party Integration Hub,2025-11,0.2,1.0
+Riley,BA,IT-123,User Experience Platform,2025-11,0.2083,1.0
+Riley,Planner,IT-123,User Experience Platform,2025-11,0.0667,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2025-11,0.2083,1.0
+Riley,Planner,IT-125,Service Catalog Redesign,2025-11,0.1667,1.0
+Riley,,,KTLO,2025-12,0.15,1.0
+Riley,BA,IT-116,Third-Party Integration Hub,2025-12,0.4,1.0
+Riley,BA,IT-123,User Experience Platform,2025-12,0.075,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2025-12,0.2083,1.0
+Riley,Planner,IT-125,Service Catalog Redesign,2025-12,0.1667,1.0
+Riley,,,KTLO,2026-01,0.15,1.0
+Riley,BA,IT-116,Third-Party Integration Hub,2026-01,0.8,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2026-01,0.05,1.0
+Riley,,,KTLO,2026-02,0.15,1.0
+Riley,BA,IT-116,Third-Party Integration Hub,2026-02,0.4,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2026-02,0.4167,1.0
+Riley,Planner,IT-125,Service Catalog Redesign,2026-02,0.0333,1.0
+Riley,,,KTLO,2026-03,0.15,1.0
+Riley,BA,IT-116,Third-Party Integration Hub,2026-03,0.2,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2026-03,0.5,1.0
+Riley,Planner,IT-125,Service Catalog Redesign,2026-03,0.15,1.0
+Riley,,,KTLO,2026-04,0.15,1.0
+Riley,BA,IT-125,Service Catalog Redesign,2026-04,0.8333,1.0
+Riley,Planner,IT-125,Service Catalog Redesign,2026-04,0.0167,1.0

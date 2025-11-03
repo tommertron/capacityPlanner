@@ -14,12 +14,18 @@
       0.2,
       0.1
     ],
-    "planner_curve": "uniform"
+    "planner_curve": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ]
   },
   "ktlo_pct_by_role": {
-    "BA": 0.1,
-    "Dev": 0.15,
-    "Planner": 0.2
+    "BA": 0.15,
+    "Dev": 0.2,
+    "Planner": 0.15
   },
   "logging_level": "INFO",
   "max_concurrent_per_role": {
@@ -28,8 +34,8 @@
     "Planner": 1
   },
   "max_months_if_open_ended": 120,
-  "planning_end": null,
-  "planning_start": "2025-01-01",
-  "random_seed": 42,
-  "planner_project_month_cap_pct": 0.2
+  "planner_project_month_cap_pct": 0.2,
+  "planning_end": "2027-02-26",
+  "planning_start": "2025-11-01",
+  "random_seed": 42
 }
