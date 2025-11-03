@@ -1,0 +1,18 @@
+id,name,parent_summary,start_month,end_month,duration_months,ba_persons,planner_persons,dev_persons,effort_ba_pm,effort_planner_pm,effort_dev_pm,priority,input_row
+P1,Billing Platform,Digital Transformation,2025-01,2025-03,3,Alice,Bob,Cara;Diego;Liam,1.0,1.2,3.0,1,1
+P3,Customer Insights Dashboard,Data & Analytics,2025-04,2025-04,1,Alice,Bob,Farah;Maya,0.7,0.5,1.6,3,3
+P5,Subscription Billing Enhancements,Digital Transformation,2025-05,2025-06,2,Alice,Bob,Cara;Diego,0.9,1.0,2.5,5,5
+P6,Procurement Workflow Tool,Procurement & Legal,2025-05,2025-06,2,Alice,Nora,Liam,0.5,0.6,1.1,6,6
+P8,Sales CRM Data Cleanse,Sales Enablement,2025-01,2025-02,2,Alice,Nora,Iris,0.4,0.6,1.0,8,8
+P9,Content Delivery Network Migration,Infrastructure Modernization,2025-07,2025-07,1,Bob,Nora,Hank;Omar,0.3,0.4,1.7,9,9
+P10,Finance Reporting Dashboard,Data & Analytics,2025-08,2025-09,2,Alice,Bob,Farah,0.6,0.7,1.2,10,10
+P11,Cloud Security Assessment,Governance & Compliance,2025-03,2025-03,1,Alice,Nora,Eva,0.5,0.4,0.8,11,11
+P12,Learning Management System Pilot,Employee Experience,2025-08,2025-09,2,Alice,Nora,Cara,0.7,0.6,1.5,12,12
+P13,Product Catalog Revamp,Digital Transformation,2025-10,2025-11,2,Alice,Bob,Cara;Diego,0.8,1.0,2.3,13,13
+P14,Vendor Risk Portal,Procurement & Legal,2025-10,2025-11,2,Alice,Nora,Liam,0.6,0.8,1.2,14,14
+P15,Customer Feedback Analyzer,Data & Analytics,2025-12,2025-12,1,Alice,Bob,Farah;Maya,0.4,0.5,1.0,15,15
+P17,Legacy ERP Data Migration,Systems Integration,2025-12,2026-02,3,Alice,Nora,Jonah;Omar,1.0,1.2,2.6,17,17
+P18,Team Collaboration Hub,Employee Experience,2026-03,2026-04,2,Alice,Bob,Kelly,0.7,0.8,1.5,18,18
+P19,Contract Renewal Tracker,Procurement & Legal,2026-03,2026-04,2,Alice,Nora,Liam,0.5,0.7,0.9,19,19
+P20,Marketing Attribution Model,Data & Analytics,2026-02,2026-02,1,Alice,Bob,Farah;Maya,0.6,0.5,1.3,20,20
+P21,IT Asset Inventory Overhaul,Infrastructure Modernization,2026-05,2026-06,2,Bob,Nora,Hank,0.6,0.8,1.4,21,21

@@ -1692,6 +1692,86 @@
     });
   }
 
+  // Create Portfolio Modal Functions
+  const createPortfolioBtn = document.getElementById('create-portfolio-btn');
+  if (createPortfolioBtn) {
+    createPortfolioBtn.addEventListener('click', () => {
+      openCreatePortfolioModal();
+    });
+  }
+
+  window.openCreatePortfolioModal = function () {
+    const modal = document.getElementById('create-portfolio-modal');
+    const form = document.getElementById('create-portfolio-form');
+
+    if (!modal || !form) return;
+
+    // Reset form
+    form.reset();
+
+    modal.classList.add('active');
+  };
+
+  window.closeCreatePortfolioModal = function () {
+    const modal = document.getElementById('create-portfolio-modal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+  };
+
+  // Create Portfolio Form Submission
+  const createPortfolioForm = document.getElementById('create-portfolio-form');
+  if (createPortfolioForm) {
+    createPortfolioForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const portfolioName = document.getElementById('new-portfolio-name').value.trim();
+      if (!portfolioName) {
+        alert('Portfolio name is required');
+        return;
+      }
+
+      // Validate name format
+      if (!/^[a-zA-Z0-9_-]+$/.test(portfolioName)) {
+        alert('Portfolio name can only contain letters, numbers, dashes, and underscores');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/portfolio/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: portfolioName })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(`Portfolio "${portfolioName}" created successfully!`);
+          closeCreatePortfolioModal();
+
+          // Refresh portfolio list
+          await refreshDirList();
+
+          // Select the newly created portfolio
+          if (portfolioSelector) {
+            portfolioSelector.value = portfolioName;
+            selectedPortfolio = portfolioName;
+            localStorage.setItem('selectedPortfolio', selectedPortfolio);
+            handlePortfolioChange();
+          }
+        } else {
+          alert(`Error creating portfolio: ${result.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error creating portfolio:', error);
+        alert('Failed to create portfolio. Please try again.');
+      }
+    });
+  }
+
   // Save people data to backend
   async function savePeopleData() {
     if (!selectedPortfolio) {

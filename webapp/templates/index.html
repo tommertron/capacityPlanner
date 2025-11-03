@@ -1157,6 +1157,7 @@
                     <option value="{{ entry.name }}">{{ entry.name }}</option>
                 {% endfor %}
             </select>
+            <button id="create-portfolio-btn" class="btn-primary" style="white-space: nowrap;">+ New Portfolio</button>
         </div>
     </div>
 
@@ -1414,6 +1415,34 @@
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closePersonModal()">Cancel</button>
                 <button type="submit" class="btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Create Portfolio Modal -->
+<div id="create-portfolio-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create New Portfolio</h3>
+            <button class="modal-close" onclick="closeCreatePortfolioModal()">&times;</button>
+        </div>
+        <form id="create-portfolio-form">
+            <div class="form-field">
+                <label for="new-portfolio-name">Portfolio Name *</label>
+                <input type="text" id="new-portfolio-name" required
+                       pattern="[a-zA-Z0-9_-]+"
+                       title="Only letters, numbers, dashes, and underscores are allowed">
+                <p style="font-size: 0.75rem; color: var(--gray-600); margin-top: 0.25rem;">
+                    Only letters, numbers, dashes, and underscores are allowed
+                </p>
+            </div>
+            <p style="font-size: 0.875rem; color: var(--gray-700); margin-bottom: 1rem;">
+                This will create a new portfolio folder with sample data that you can customize.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeCreatePortfolioModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Portfolio</button>
             </div>
         </form>
     </div>
