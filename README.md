@@ -70,11 +70,39 @@ If you need multi-user access, consider:
 
 ## Installation
 
+### Quick Install (Recommended)
+
+The easiest way to install and run Portfolio Planner is using the provided shell script, which handles all dependencies automatically:
+
 1. **Clone or download the repository**
 
 ```bash
-git clone <repository-url>
-cd capacityPlanner2
+git clone https://github.com/tommertron/capacityPlanner.git
+cd capacityPlanner
+```
+
+2. **Run the startup script**
+
+```bash
+./run_web.sh
+```
+
+The script will automatically:
+- Create a virtual environment
+- Install all required dependencies
+- Start the application on port 5151
+
+That's it! Skip to the "Running the Application" section below.
+
+### Manual Installation (Optional)
+
+If you prefer to set up the environment manually:
+
+1. **Clone or download the repository**
+
+```bash
+git clone https://github.com/tommertron/capacityPlanner.git
+cd capacityPlanner
 ```
 
 2. **Create a virtual environment**
@@ -98,16 +126,36 @@ On Windows:
 4. **Install dependencies**
 
 ```bash
-pip install -r requirements.txt
-```
-
-If a `requirements.txt` file doesn't exist, install the required packages manually:
-
-```bash
-pip install flask pandas numpy
+pip install -r requirements-web.txt
 ```
 
 ## Running the Application
+
+### Quick Start (Recommended)
+
+The easiest way to get started is to use the provided shell script:
+
+```bash
+./run_web.sh
+```
+
+This script will:
+- Automatically check for Python 3
+- Create a virtual environment (`.venv`) if it doesn't exist
+- Install all required dependencies from `requirements-web.txt`
+- Start the Flask web server on **port 5151** (default)
+
+Once the server starts, open your browser to: `http://127.0.0.1:5151`
+
+**Custom port:** To use a different port, set the `PORT` environment variable:
+
+```bash
+PORT=8080 ./run_web.sh
+```
+
+### Manual Setup (Alternative)
+
+If you prefer to run the application manually:
 
 1. **Activate the virtual environment** (if not already activated)
 
@@ -120,20 +168,14 @@ source .venv/bin/activate  # macOS/Linux
 2. **Start the Flask web server**
 
 ```bash
-python -m flask --app webapp.app run
-```
-
-Or specify a custom port:
-
-```bash
-python -m flask --app webapp.app run --port 5001
+python -m flask --app webapp.app run --port 5151
 ```
 
 3. **Open your web browser**
 
-Navigate to: `http://127.0.0.1:5000` (or the port you specified)
+Navigate to: `http://127.0.0.1:5151` (or the port you specified)
 
-4. **Start using the application**
+### Start Using the Application
 
 - Create a new portfolio or select an existing one
 - Configure projects, people, and settings
@@ -143,7 +185,7 @@ Navigate to: `http://127.0.0.1:5000` (or the port you specified)
 ## Project Structure
 
 ```
-capacityPlanner2/
+capacityPlanner/
 ├── capacity_tracker/       # Core scheduling algorithm
 │   ├── main.py            # CLI entry point
 │   ├── engine.py          # Planning engine
@@ -296,9 +338,14 @@ P1,Project Name,1,1.0,2.0,3.0,Program Name,,,front-end;back-end
 - Reduce the planning time window if open-ended
 
 ### Port already in use
-If port 5000 is already in use:
+If port 5151 is already in use, specify a different port:
 ```bash
-python -m flask --app webapp.app run --port 5001
+PORT=8080 ./run_web.sh
+```
+
+Or if running manually:
+```bash
+python -m flask --app webapp.app run --port 8080
 ```
 
 ## Contributing
@@ -312,10 +359,6 @@ When reporting issues with the modeller algorithm, please include:
 - Steps to reproduce the issue
 - Expected behavior vs. actual behavior
 - Any error messages or logs
-
-## License
-
-[Specify your license here]
 
 ## Acknowledgments
 
