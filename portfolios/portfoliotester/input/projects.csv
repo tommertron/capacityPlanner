@@ -1,5 +1,5 @@
 effort_ba_pm,effort_dev_pm,effort_planner_pm,id,name,parent_summary,priority,required_skillsets_ba,required_skillsets_dev,required_skillsets_planner
-0,0.5,0,IT-146,Financial System Automation,Operational Efficiency Program,1,,billing-systems,
+0,0.5,0,IT-146,Financial System Automation,Operational Efficiency Program,1,,database; back-end,capacity-planning
 2,3,1,IT-116,Third-Party Integration Hub,Channel Growth Initiative,2,,back-end,
 5,8,2,IT-125,Service Catalog Redesign,Product Strategy Initiative,3,,back-end;front-end,
 0,2,0,IT-35,Database Redundancy Setup,Infrastructure Modernization,4,,back-end,

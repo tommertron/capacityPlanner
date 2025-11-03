@@ -1,0 +1,11 @@
+skill_id,name,category,description
+business-analysis,Business Analysis,BA,Requirements gathering and business process analysis
+stakeholder-management,Stakeholder Management,BA,Managing stakeholder relationships and communications
+data-analysis,Data Analysis,BA,Data modeling and analytics
+back-end,Backend Development,Dev,Server-side application development
+front-end,Frontend Development,Dev,Client-side UI/UX development
+database,Database,Dev,Database design and optimization
+api-design,API Design,Dev,RESTful API design and implementation
+capacity-planning,Capacity Planning,Planner,Resource capacity and workload planning
+project-management,Project Management,Planner,Project planning and execution
+agile-scrum,Agile/Scrum,Planner,Agile methodologies and Scrum practices

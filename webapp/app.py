@@ -347,6 +347,64 @@ def create_app() -> Flask:
         except (ValueError, OSError, json_module.JSONDecodeError) as e:
             return jsonify({"error": str(e)}), 400
 
+    @app.get("/api/skills/<portfolio_name>")
+    def get_skills(portfolio_name: str):
+        """Get skills.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            skills_file = portfolio_path / "input" / "skills.csv"
+            if not skills_file.exists():
+                # Return empty array if file doesn't exist
+                return jsonify([])
+
+            import csv
+            skills_data = []
+            with open(skills_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    skills_data.append(row)
+
+            return jsonify(skills_data)
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/skills/<portfolio_name>")
+    def save_skills(portfolio_name: str):
+        """Save skills.csv for a portfolio"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            skills_data = request.get_json()
+            if not isinstance(skills_data, list):
+                return jsonify({"error": "skills data must be an array"}), 400
+
+            skills_file = portfolio_path / "input" / "skills.csv"
+            skills_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Write CSV with expected columns
+            import csv
+            if len(skills_data) > 0:
+                fieldnames = ['skill_id', 'name', 'category', 'description']
+                with open(skills_file, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(skills_data)
+            else:
+                # Create empty file with headers
+                fieldnames = ['skill_id', 'name', 'category', 'description']
+                with open(skills_file, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+
+            return jsonify({"success": True})
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
     @app.post("/api/portfolio/create")
     def create_portfolio():
         """Create a new portfolio by copying from sample portfolio"""

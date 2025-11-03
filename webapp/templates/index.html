@@ -1268,6 +1268,7 @@
             <h2>People</h2>
             <div class="subtabs">
                 <button class="subtab active" data-subtab="people-staff">Staff</button>
+                <button class="subtab" data-subtab="people-skills">Skills</button>
                 <button class="subtab" data-subtab="people-allocation">Resource Allocation</button>
             </div>
 
@@ -1278,6 +1279,16 @@
                 </div>
                 <div id="people-container">
                     <div class="empty-state">Select a portfolio to manage people</div>
+                </div>
+            </div>
+
+            <div id="people-skills" class="subtab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Skills Management</h3>
+                    <button id="add-skill-btn" class="btn-primary">+ Add Skill</button>
+                </div>
+                <div id="skills-container">
+                    <div class="empty-state">Select a portfolio to manage skills</div>
                 </div>
             </div>
 
@@ -1551,6 +1562,85 @@
 
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closePersonModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Program Edit Modal -->
+<div id="program-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="program-modal-title">Edit Program</h3>
+            <button class="modal-close" onclick="closeProgramModal()">&times;</button>
+        </div>
+        <form id="program-form">
+            <div class="form-field">
+                <label for="program-name">Program Name *</label>
+                <input type="text" id="program-name" required>
+            </div>
+
+            <div class="form-field">
+                <label for="program-color">Color *</label>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <input type="color" id="program-color" required style="width: 80px; height: 40px; border: 1px solid var(--gray-300); border-radius: 4px;">
+                    <input type="text" id="program-color-hex" pattern="#[0-9A-Fa-f]{6}" placeholder="#1F77B4" style="flex: 1;">
+                </div>
+                <p style="font-size: 0.75rem; color: var(--gray-600); margin-top: 0.25rem;">
+                    Choose a color to identify this program in timelines and reports
+                </p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeProgramModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Skill Edit Modal -->
+<div id="skill-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="skill-modal-title">Edit Skill</h3>
+            <button class="modal-close" onclick="closeSkillModal()">&times;</button>
+        </div>
+        <form id="skill-form">
+            <div class="form-field">
+                <label for="skill-id">Skill ID *</label>
+                <input type="text" id="skill-id" required
+                       pattern="[a-z0-9-]+"
+                       title="Use lowercase letters, numbers, and dashes only">
+                <p style="font-size: 0.75rem; color: var(--gray-600); margin-top: 0.25rem;">
+                    Use lowercase letters, numbers, and dashes (e.g., "back-end", "business-analysis")
+                </p>
+            </div>
+
+            <div class="form-field">
+                <label for="skill-name">Name *</label>
+                <input type="text" id="skill-name" required>
+            </div>
+
+            <div class="form-field">
+                <label for="skill-category">Category *</label>
+                <select id="skill-category" required>
+                    <option value="">Select a category...</option>
+                    <option value="BA">BA</option>
+                    <option value="Dev">Dev</option>
+                    <option value="Planner">Planner</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="skill-description">Description</label>
+                <textarea id="skill-description" rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeSkillModal()">Cancel</button>
                 <button type="submit" class="btn-primary">Save</button>
             </div>
         </form>

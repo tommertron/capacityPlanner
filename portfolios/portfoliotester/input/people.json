@@ -1,13 +1,12 @@
 [
   {
-    "person": "Katherine",
+    "person": "Natasha",
     "roles": [
       "BA"
     ],
     "active": true,
     "start_date": "2026-04-01",
     "skillsets": [
-      "business-analysis",
       "billing-systems"
     ],
     "preferred_parent_summaries": [],
@@ -26,7 +25,7 @@
   {
     "active": true,
     "notes": "",
-    "person": "Brittany",
+    "person": "Sabina",
     "preferred_parent_summaries": [],
     "roles": [
       "Planner"
@@ -49,7 +48,7 @@
   {
     "active": true,
     "notes": "",
-    "person": "Dylan",
+    "person": "Sherry",
     "preferred_parent_summaries": [],
     "roles": [
       "Dev"
@@ -61,7 +60,7 @@
   {
     "active": true,
     "notes": "",
-    "person": "Marcus",
+    "person": "Bruce",
     "preferred_parent_summaries": [],
     "roles": [
       "Dev"
@@ -127,7 +126,7 @@
     "active": true,
     "end_date": "2026-04-01",
     "notes": "",
-    "person": "Riley",
+    "person": "Tony",
     "preferred_parent_summaries": [
       "Product Strategy Initiative"
     ],

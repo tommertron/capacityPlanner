@@ -788,6 +788,7 @@
         loadFiles();
       } else if (targetTab === 'people') {
         loadPeople();
+        loadSkills();
       } else if (targetTab === 'projects') {
         loadProjects();
       } else if (targetTab === 'settings') {
@@ -825,6 +826,8 @@
         loadUnallocatedProjects();
       } else if (targetSubtab === 'people-staff') {
         loadPeople();
+      } else if (targetSubtab === 'people-skills') {
+        loadSkills();
       } else if (targetSubtab === 'people-allocation') {
         loadResourceAllocation();
       }
@@ -1487,14 +1490,17 @@
   // Add person button handler
   const addPersonBtn = document.getElementById('add-person-btn');
   if (addPersonBtn) {
-    addPersonBtn.addEventListener('click', () => {
+    addPersonBtn.addEventListener('click', async () => {
       editingPersonIndex = -1;
+      await ensureProgramsLoaded(); // Load programs for autocomplete
       openPersonModal();
     });
   }
 
   // Open modal for adding/editing person
-  window.openPersonModal = function (person = null) {
+  window.openPersonModal = async function (person = null) {
+    await ensureProgramsLoaded(); // Ensure programs are loaded for autocomplete
+
     const modal = document.getElementById('person-modal');
     const modalTitle = document.getElementById('modal-title');
     const form = document.getElementById('person-form');
@@ -1522,15 +1528,19 @@
       document.getElementById('person-end-date').value = person.end_date || '';
       document.getElementById('person-notes').value = person.notes || '';
 
-      // Initialize tag inputs
-      initializeTagInput('skillsets-container', person.skillsets || []);
-      initializeTagInput('summaries-container', person.preferred_parent_summaries || []);
+      // Initialize tag inputs with skills and programs suggestions
+      const skillSuggestions = skillsData.map(s => s.skill_id);
+      const programSuggestions = programsData.map(p => p.name).filter(n => n);
+      initializeTagInput('skillsets-container', person.skillsets || [], skillSuggestions);
+      initializeTagInput('summaries-container', person.preferred_parent_summaries || [], programSuggestions);
     } else {
       // Add mode
       modalTitle.textContent = 'Add Person';
       document.getElementById('person-active').checked = true;
-      initializeTagInput('skillsets-container', []);
-      initializeTagInput('summaries-container', []);
+      const skillSuggestions = skillsData.map(s => s.skill_id);
+      const programSuggestions = programsData.map(p => p.name).filter(n => n);
+      initializeTagInput('skillsets-container', [], skillSuggestions);
+      initializeTagInput('summaries-container', [], programSuggestions);
     }
 
     modal.classList.add('active');
@@ -1560,7 +1570,7 @@
   };
 
   // Tag input functionality
-  function initializeTagInput(containerId, initialTags = []) {
+  function initializeTagInput(containerId, initialTags = [], suggestions = []) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -1572,11 +1582,28 @@
       addTag(container, tag);
     });
 
-    // Add input
+    // Add input with autocomplete
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'tag-input';
     input.placeholder = 'Type and press Enter';
+
+    // Create datalist for autocomplete if suggestions provided
+    if (suggestions.length > 0) {
+      const datalistId = `${containerId}-suggestions`;
+      input.setAttribute('list', datalistId);
+
+      const datalist = document.createElement('datalist');
+      datalist.id = datalistId;
+
+      suggestions.forEach(suggestion => {
+        const option = document.createElement('option');
+        option.value = suggestion;
+        datalist.appendChild(option);
+      });
+
+      container.appendChild(datalist);
+    }
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -1807,12 +1834,234 @@
       const activeTab = document.querySelector('.tab.active');
       if (activeTab && activeTab.dataset.tab === 'people') {
         loadPeople();
+        loadSkills();
       } else if (activeTab && activeTab.dataset.tab === 'projects') {
         loadProjects();
       } else if (activeTab && activeTab.dataset.tab === 'settings') {
         loadConfig();
       }
     });
+  }
+
+  // Skills Management
+  let skillsData = [];
+  let editingSkillIndex = -1;
+
+  // Load skills data
+  async function loadSkills() {
+    const container = document.getElementById('skills-container');
+    if (!container) return;
+
+    if (!selectedPortfolio) {
+      container.innerHTML = '<div class="empty-state">Please select a portfolio from the dropdown above</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="empty-state">Loading skills...</div>';
+
+    try {
+      const response = await fetch(`/api/skills/${selectedPortfolio}`);
+      if (!response.ok) {
+        container.innerHTML = '<div class="empty-state">No skills data found. Click "Add Skill" to create your first skill.</div>';
+        skillsData = [];
+        return;
+      }
+
+      skillsData = await response.json();
+      renderSkillsTable();
+    } catch (err) {
+      console.error('Error loading skills:', err);
+      container.innerHTML = '<div class="empty-state">Error loading skills data</div>';
+    }
+  }
+
+  // Render skills table
+  function renderSkillsTable() {
+    const container = document.getElementById('skills-container');
+    if (!container) return;
+
+    if (skillsData.length === 0) {
+      container.innerHTML = '<div class="empty-state">No skills found. Click "Add Skill" to get started.</div>';
+      return;
+    }
+
+    // Group skills by category
+    const categories = {};
+    skillsData.forEach((skill, index) => {
+      const category = skill.category || 'General';
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      categories[category].push({ ...skill, index });
+    });
+
+    let html = '<div class="table-container">';
+
+    // Render each category
+    Object.entries(categories).sort().forEach(([category, skills]) => {
+      html += `<div style="margin-bottom: 2rem;">`;
+      html += `<h4 style="margin-bottom: 0.5rem; color: var(--gray-700);">${category} (${skills.length})</h4>`;
+      html += `<table style="width: 100%;">`;
+      html += `<thead><tr>`;
+      html += `<th style="text-align: left; width: 20%;">Skill ID</th>`;
+      html += `<th style="text-align: left; width: 20%;">Name</th>`;
+      html += `<th style="text-align: left; width: 40%;">Description</th>`;
+      html += `<th style="text-align: right; width: 20%;">Actions</th>`;
+      html += `</tr></thead>`;
+      html += `<tbody>`;
+
+      skills.forEach(skill => {
+        html += `<tr>`;
+        html += `<td><code>${skill.skill_id}</code></td>`;
+        html += `<td>${skill.name || ''}</td>`;
+        html += `<td style="color: var(--gray-600); font-size: 0.875rem;">${skill.description || ''}</td>`;
+        html += `<td style="text-align: right;">`;
+        html += `<button class="btn-icon" onclick="editSkill(${skill.index})" title="Edit">✏️</button>`;
+        html += `<button class="btn-icon delete" onclick="deleteSkill(${skill.index})" title="Delete">🗑️</button>`;
+        html += `</td>`;
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>`;
+      html += `</div>`;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // Add skill button handler
+  const addSkillBtn = document.getElementById('add-skill-btn');
+  if (addSkillBtn) {
+    addSkillBtn.addEventListener('click', () => {
+      editingSkillIndex = -1;
+      openSkillModal();
+    });
+  }
+
+  // Open modal for adding/editing skill
+  window.openSkillModal = function (skill = null) {
+    const modal = document.getElementById('skill-modal');
+    const modalTitle = document.getElementById('skill-modal-title');
+    const form = document.getElementById('skill-form');
+
+    if (!modal || !form) return;
+
+    // Reset form
+    form.reset();
+
+    if (skill) {
+      // Edit mode
+      modalTitle.textContent = 'Edit Skill';
+      document.getElementById('skill-id').value = skill.skill_id || '';
+      document.getElementById('skill-id').readOnly = true; // Don't allow changing ID
+      document.getElementById('skill-name').value = skill.name || '';
+      document.getElementById('skill-category').value = skill.category || '';
+      document.getElementById('skill-description').value = skill.description || '';
+    } else {
+      // Add mode
+      modalTitle.textContent = 'Add Skill';
+      document.getElementById('skill-id').readOnly = false;
+    }
+
+    modal.classList.add('active');
+  };
+
+  window.editSkill = function (index) {
+    editingSkillIndex = index;
+    openSkillModal(skillsData[index]);
+  };
+
+  window.deleteSkill = async function (index) {
+    const skill = skillsData[index];
+    if (!confirm(`Are you sure you want to delete the skill "${skill.name}"?`)) {
+      return;
+    }
+
+    skillsData.splice(index, 1);
+    await saveSkillsData();
+    renderSkillsTable();
+  };
+
+  window.closeSkillModal = function () {
+    const modal = document.getElementById('skill-modal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+  };
+
+  // Skill form submission
+  const skillForm = document.getElementById('skill-form');
+  if (skillForm) {
+    skillForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const skillId = document.getElementById('skill-id').value.trim();
+      const name = document.getElementById('skill-name').value.trim();
+      const category = document.getElementById('skill-category').value;
+      const description = document.getElementById('skill-description').value.trim();
+
+      if (!skillId || !name || !category) {
+        alert('Skill ID, Name, and Category are required');
+        return;
+      }
+
+      // Check for duplicate skill_id when adding new
+      if (editingSkillIndex < 0) {
+        const duplicate = skillsData.find(s => s.skill_id === skillId);
+        if (duplicate) {
+          alert('A skill with this ID already exists');
+          return;
+        }
+      }
+
+      const skillData = {
+        skill_id: skillId,
+        name: name,
+        category: category,
+        description: description
+      };
+
+      if (editingSkillIndex >= 0) {
+        // Update existing
+        skillsData[editingSkillIndex] = skillData;
+      } else {
+        // Add new
+        skillsData.push(skillData);
+      }
+
+      await saveSkillsData();
+      closeSkillModal();
+      renderSkillsTable();
+    });
+  }
+
+  // Save skills data to backend
+  async function saveSkillsData() {
+    if (!selectedPortfolio) {
+      alert('No portfolio selected');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/skills/${selectedPortfolio}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(skillsData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save');
+      }
+
+      console.log('Skills data saved successfully');
+    } catch (err) {
+      console.error('Error saving skills:', err);
+      alert('Error saving skills data: ' + err.message);
+    }
   }
 
   // Programs Management
@@ -1917,69 +2166,33 @@
       return;
     }
 
-    let html = '<div class="table-container"><table class="allocation-table" id="programs-table">';
-    html += '<thead><tr>';
-    html += '<th>Program</th>';
-    html += '<th style="width: 160px;">Color</th>';
-    html += '<th style="width: 80px;">Actions</th>';
-    html += '</tr></thead><tbody>';
+    let html = '<div class="people-grid" style="gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">';
 
     programsData.forEach((program, index) => {
-      const nameValue = escapeHtml(program.name || '');
+      const nameValue = program.name || 'Unnamed Program';
       const colorValue = sanitizeProgramColor(program.color || '', program.name || `Program ${index + 1}`, index);
       const badgeBorder = shadeColor(colorValue, -0.25);
       const rowBackground = getProgramBackground(colorValue);
-      html += `<tr data-index="${index}" data-program-color="${colorValue}" style="--program-color:${colorValue}; --program-bg:${rowBackground};">`;
-      html += `<td class="editable-program-cell" contenteditable="true" data-field="name" data-index="${index}">${nameValue}</td>`;
-      html += '<td class="color-picker-cell">';
-      html += '<div class="program-color-editor">';
-      html += `<span class="program-color-badge" style="background:${colorValue}; border-color:${badgeBorder};"></span>`;
-      html += `<input type="color" value="${colorValue}" data-index="${index}" aria-label="Program color">`;
-      html += '</div></td>';
-      html += `<td class="actions-cell" style="text-align: center;">`;
-      html += `<button class="delete-program-btn" onclick="deleteProgram(${index})" title="Delete">🗑️</button>`;
-      html += '</td></tr>';
+
+      html += `<div class="person-card" style="border-left: 4px solid ${colorValue};">`;
+      html += `<div class="person-header">`;
+      html += `<div>`;
+      html += `<div class="person-name">${escapeHtml(nameValue)}</div>`;
+      html += `<div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">`;
+      html += `<span style="display: inline-block; width: 30px; height: 30px; background: ${colorValue}; border: 2px solid ${badgeBorder}; border-radius: 4px;"></span>`;
+      html += `<code style="font-size: 0.75rem; color: var(--gray-600);">${colorValue}</code>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `<div class="person-actions">`;
+      html += `<button class="btn-icon" onclick="editProgram(${index})" title="Edit">✏️</button>`;
+      html += `<button class="btn-icon delete" onclick="deleteProgram(${index})" title="Delete">🗑️</button>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `</div>`;
     });
 
-    html += '</tbody></table></div>';
+    html += '</div>';
     container.innerHTML = html;
-
-    const nameCells = container.querySelectorAll('.editable-program-cell');
-    nameCells.forEach((cell) => {
-      cell.addEventListener('blur', (event) => {
-        const idx = Number.parseInt(event.target.dataset.index, 10);
-        if (Number.isNaN(idx) || programsData[idx] === undefined) {
-          return;
-        }
-        programsData[idx].name = event.target.textContent.trim();
-        rebuildProgramColorMap();
-        updateProgramsUnsavedIndicator();
-        renderProgramsTable();
-        refreshProjectVisuals();
-      });
-      cell.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-          event.preventDefault();
-          event.target.blur();
-        }
-      });
-    });
-
-    const colorInputs = container.querySelectorAll('.color-picker-cell input[type="color"]');
-    colorInputs.forEach((input) => {
-      input.addEventListener('change', (event) => {
-        const idx = Number.parseInt(event.target.dataset.index, 10);
-        if (Number.isNaN(idx) || programsData[idx] === undefined) {
-          return;
-        }
-        const program = programsData[idx];
-        program.color = sanitizeProgramColor(event.target.value, program.name || `Program ${idx + 1}`, idx);
-        rebuildProgramColorMap();
-        updateProgramsUnsavedIndicator();
-        renderProgramsTable();
-        refreshProjectVisuals();
-      });
-    });
 
     updateProgramsUnsavedIndicator();
   }
@@ -2017,18 +2230,105 @@
     renderProgramsTable();
   }
 
-  window.addProgram = function () {
-    const nextIndex = programsData.length;
-    const defaultColor = PROGRAM_COLOR_PALETTE[nextIndex % PROGRAM_COLOR_PALETTE.length] || DEFAULT_PROGRAM_COLOR;
-    programsData.push({
-      name: '',
-      color: defaultColor
-    });
-    rebuildProgramColorMap();
-    updateProgramsUnsavedIndicator();
-    renderProgramsTable();
-    refreshProjectVisuals();
+  let editingProgramIndex = -1;
+
+  window.openProgramModal = function (program = null) {
+    const modal = document.getElementById('program-modal');
+    const modalTitle = document.getElementById('program-modal-title');
+    const form = document.getElementById('program-form');
+
+    if (!modal || !form) return;
+
+    // Reset form
+    form.reset();
+
+    if (program) {
+      // Edit mode
+      modalTitle.textContent = 'Edit Program';
+      document.getElementById('program-name').value = program.name || '';
+      const colorValue = sanitizeProgramColor(program.color || '', program.name || '', 0);
+      document.getElementById('program-color').value = colorValue;
+      document.getElementById('program-color-hex').value = colorValue;
+    } else {
+      // Add mode
+      modalTitle.textContent = 'Add Program';
+      const nextIndex = programsData.length;
+      const defaultColor = PROGRAM_COLOR_PALETTE[nextIndex % PROGRAM_COLOR_PALETTE.length] || DEFAULT_PROGRAM_COLOR;
+      document.getElementById('program-color').value = defaultColor;
+      document.getElementById('program-color-hex').value = defaultColor;
+    }
+
+    modal.classList.add('active');
   };
+
+  window.editProgram = function (index) {
+    editingProgramIndex = index;
+    openProgramModal(programsData[index]);
+  };
+
+  window.addProgram = function () {
+    editingProgramIndex = -1;
+    openProgramModal();
+  };
+
+  window.closeProgramModal = function () {
+    const modal = document.getElementById('program-modal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+  };
+
+  // Program form submission
+  const programForm = document.getElementById('program-form');
+  if (programForm) {
+    // Sync color picker with hex input
+    const colorPicker = document.getElementById('program-color');
+    const colorHex = document.getElementById('program-color-hex');
+
+    if (colorPicker && colorHex) {
+      colorPicker.addEventListener('input', (e) => {
+        colorHex.value = e.target.value;
+      });
+
+      colorHex.addEventListener('input', (e) => {
+        const value = e.target.value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+          colorPicker.value = value;
+        }
+      });
+    }
+
+    programForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('program-name').value.trim();
+      const color = document.getElementById('program-color').value;
+
+      if (!name) {
+        alert('Program name is required');
+        return;
+      }
+
+      const programData = {
+        name: name,
+        color: color
+      };
+
+      if (editingProgramIndex >= 0) {
+        // Update existing
+        programsData[editingProgramIndex] = programData;
+      } else {
+        // Add new
+        programsData.push(programData);
+      }
+
+      rebuildProgramColorMap();
+      updateProgramsUnsavedIndicator();
+      renderProgramsTable();
+      refreshProjectVisuals();
+      closeProgramModal();
+    });
+  }
 
   window.deleteProgram = function (index) {
     if (index < 0 || index >= programsData.length) {
@@ -2966,6 +3266,18 @@
 
     await ensureProgramsLoaded();
 
+    // Load skills for autocomplete
+    if (skillsData.length === 0) {
+      try {
+        const skillsResponse = await fetch(`/api/skills/${selectedPortfolio}`);
+        if (skillsResponse.ok) {
+          skillsData = await skillsResponse.json();
+        }
+      } catch (err) {
+        console.error('Error loading skills for projects:', err);
+      }
+    }
+
     try {
       const response = await fetch(`/api/projects/${selectedPortfolio}`);
       if (!response.ok) {
@@ -3057,7 +3369,32 @@
         const isEditable = col.key !== 'priority'; // Priority is auto-calculated
         const isChanged = changedFields.includes(col.key);
         const cellClass = isChanged ? 'editable-cell changed' : 'editable-cell';
-        html += `<td class="${cellClass}" contenteditable="${isEditable}" data-field="${col.key}" data-index="${dataIndex}">${escapeHtml(value)}</td>`;
+
+        // Use dropdown for parent_summary (Program)
+        if (col.key === 'parent_summary') {
+          html += `<td class="${cellClass}" data-field="${col.key}" data-index="${dataIndex}">`;
+          html += `<select class="program-select" data-index="${dataIndex}" style="width: 100%; padding: 0.25rem; border: 1px solid var(--gray-300); border-radius: 4px; background: white;">`;
+          html += `<option value="">No Program</option>`;
+          programsData.forEach(prog => {
+            const selected = prog.name === value ? 'selected' : '';
+            html += `<option value="${escapeHtml(prog.name)}" ${selected}>${escapeHtml(prog.name)}</option>`;
+          });
+          html += `</select>`;
+          html += `</td>`;
+        } else if (col.key === 'id' || col.key === 'name') {
+          // Color ID and Name cells according to program color with background
+          const bgColor = programColor ? getProgramBackground(programColor) : '';
+          const colorStyle = programColor ? `color: ${programColor}; background: ${bgColor};` : '';
+          html += `<td class="${cellClass}" contenteditable="${isEditable}" data-field="${col.key}" data-index="${dataIndex}" style="${colorStyle}">${escapeHtml(value)}</td>`;
+        } else if (col.key.startsWith('required_skillsets_')) {
+          // Use input with datalist for skills columns
+          const datalistId = `skills-datalist-${col.key}`;
+          html += `<td class="${cellClass}" data-field="${col.key}" data-index="${dataIndex}">`;
+          html += `<input type="text" class="skills-input" list="${datalistId}" value="${escapeHtml(value)}" data-field="${col.key}" data-index="${dataIndex}" style="width: 100%; padding: 0.25rem; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 0.875rem;" placeholder="skill1;skill2">`;
+          html += `</td>`;
+        } else {
+          html += `<td class="${cellClass}" contenteditable="${isEditable}" data-field="${col.key}" data-index="${dataIndex}">${escapeHtml(value)}</td>`;
+        }
       });
 
       const disableMoveUp = isFilteredView || dataIndex === 0;
@@ -3071,8 +3408,61 @@
       html += '</tr>';
     });
 
-    html += '</tbody></table></div>';
+    html += '</tbody></table>';
+
+    // Add datalists for skills autocomplete
+    html += `<datalist id="skills-datalist-required_skillsets_ba">`;
+    skillsData.filter(s => !s.category || s.category === 'BA' || s.category === 'General').forEach(skill => {
+      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
+    });
+    html += `</datalist>`;
+
+    html += `<datalist id="skills-datalist-required_skillsets_planner">`;
+    skillsData.filter(s => !s.category || s.category === 'Planner' || s.category === 'General').forEach(skill => {
+      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
+    });
+    html += `</datalist>`;
+
+    html += `<datalist id="skills-datalist-required_skillsets_dev">`;
+    skillsData.filter(s => !s.category || s.category === 'Dev' || s.category === 'General').forEach(skill => {
+      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
+    });
+    html += `</datalist>`;
+
+    html += '</div>';
     container.innerHTML = html;
+
+    // Add change event listeners for program dropdowns
+    const programSelects = container.querySelectorAll('.program-select');
+    programSelects.forEach(select => {
+      select.addEventListener('change', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        const newValue = e.target.value;
+
+        if (projectsData[index]) {
+          projectsData[index].parent_summary = newValue;
+          // Update change indicators
+          updateUnsavedIndicator();
+          renderEditableProjectsTable();
+        }
+      });
+    });
+
+    // Add input event listeners for skills inputs
+    const skillsInputs = container.querySelectorAll('.skills-input');
+    skillsInputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        const field = e.target.dataset.field;
+        const newValue = e.target.value;
+
+        if (projectsData[index]) {
+          projectsData[index][field] = newValue;
+          // Update change indicators without re-rendering
+          updateUnsavedIndicator();
+        }
+      });
+    });
 
     // Add blur event listeners to update data
     const editableCells = container.querySelectorAll('.editable-cell');
