@@ -60,33 +60,30 @@
         .tabs {
             display: flex;
             gap: 0.25rem;
-            border-bottom: 2px solid var(--gray-200);
             margin-bottom: 2rem;
             background: white;
-            padding: 0 1rem;
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
             box-shadow: var(--shadow-sm);
         }
         .tab {
             padding: 1rem 1.5rem;
-            background: none;
+            background: #e3f2fd;
             border: none;
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 600;
-            color: var(--gray-600);
-            border-bottom: 3px solid transparent;
+            color: #1565c0;
+            border-radius: var(--border-radius);
             transition: all 0.2s;
-            position: relative;
-            top: 2px;
         }
         .tab:hover {
-            color: var(--primary-color);
-            background: var(--gray-50);
+            background: #bbdefb;
+            color: #0d47a1;
         }
         .tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
+            background: #2196f3;
+            color: white;
         }
         .tab-content {
             display: none;
@@ -785,29 +782,30 @@
         /* Subtabs */
         .subtabs {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.25rem;
             margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--gray-200);
+            background: var(--gray-50);
+            padding: 0.25rem;
+            border-radius: var(--border-radius);
         }
         .subtab {
             padding: 0.75rem 1.25rem;
-            background: none;
+            background: white;
             border: none;
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 600;
-            color: var(--gray-600);
-            border-bottom: 3px solid transparent;
-            position: relative;
-            top: 2px;
+            color: #1565c0;
+            border-radius: calc(var(--border-radius) / 1.5);
             transition: all 0.2s;
         }
         .subtab:hover {
-            color: var(--primary-color);
+            background: #e3f2fd;
+            color: #0d47a1;
         }
         .subtab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
+            background: #2196f3;
+            color: white;
         }
         .subtab-content {
             display: none;
@@ -1167,6 +1165,7 @@
         <button class="tab" data-tab="people">People</button>
         <button class="tab" data-tab="modelling">Modeller</button>
         <button class="tab" data-tab="files">Files</button>
+        <button class="tab" data-tab="help">Help</button>
     </div>
 
     <!-- Projects Tab -->
@@ -1348,6 +1347,144 @@
             <h2>Portfolio Files</h2>
             <div id="files-container">
                 <div class="empty-state">Select a portfolio to view files</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Tab -->
+    <div id="help" class="tab-content">
+        <div class="card">
+            <h2>Portfolio Planner - Help Guide</h2>
+            <div class="markdown-body">
+                <h3>Overview</h3>
+                <p>Portfolio Planner is a capacity planning tool that helps you manage project portfolios, allocate resources, and visualize team workload over time. The system uses a scheduling algorithm to assign people to projects based on their roles, skills, availability, and project priorities.</p>
+
+                <h3>Getting Started</h3>
+                <h4>1. Create or Select a Portfolio</h4>
+                <ul>
+                    <li><strong>Create New Portfolio:</strong> Click the "+ New Portfolio" button next to the portfolio selector. Enter a name (letters, numbers, dashes, and underscores only). The new portfolio will be created with sample data that you can customize.</li>
+                    <li><strong>Select Portfolio:</strong> Use the dropdown menu at the top of the page to select an existing portfolio to work with.</li>
+                </ul>
+
+                <h4>2. Configure Your Portfolio Data</h4>
+                <p>Once a portfolio is selected, you can configure the following:</p>
+
+                <h3>Projects Tab</h3>
+                <h4>Projects Subtab</h4>
+                <ul>
+                    <li><strong>View Projects:</strong> See all projects in your portfolio with their effort estimates, priorities, and required skillsets.</li>
+                    <li><strong>Add Project:</strong> Click "+ Add Project" to create a new project. Enter project ID, name, effort estimates (BA, Planner, Dev in person-months), priority, parent program, and required skillsets.</li>
+                    <li><strong>Edit Project:</strong> Click on any cell in the table to edit it directly. Changes are highlighted in yellow.</li>
+                    <li><strong>Delete Project:</strong> Click the trash icon next to a project to remove it.</li>
+                    <li><strong>Change Priority:</strong> Use the up/down arrows to adjust project priority (lower number = higher priority).</li>
+                    <li><strong>Save Changes:</strong> Click "Save Changes" to persist your edits. Click "Discard Changes" to revert.</li>
+                    <li><strong>Filter by Program:</strong> Use the program filter dropdown to view projects from a specific program.</li>
+                </ul>
+
+                <h4>Programs Subtab</h4>
+                <ul>
+                    <li><strong>View Programs:</strong> See all programs (project groupings) with their assigned colors.</li>
+                    <li><strong>Add Program:</strong> Click "+ Add Program" to create a new program with a name and color.</li>
+                    <li><strong>Edit Program:</strong> Click on the name to edit it, or click the color picker to change the program color.</li>
+                    <li><strong>Delete Program:</strong> Click the trash icon to remove a program (note: projects assigned to this program will still exist).</li>
+                </ul>
+
+                <h4>Timeline Subtab</h4>
+                <ul>
+                    <li><strong>View Results:</strong> After running the model, see when each project is scheduled to run, its duration, and assigned team members.</li>
+                    <li><strong>Sort Options:</strong> Click "Sort by Program" or "Sort by Start Date" to reorder the timeline view.</li>
+                    <li><strong>Filter by Program:</strong> Use the program filter to view timeline for specific programs.</li>
+                </ul>
+
+                <h4>Unallocated Subtab</h4>
+                <ul>
+                    <li><strong>View Failed Projects:</strong> See projects that couldn't be scheduled due to resource constraints or other issues.</li>
+                    <li><strong>Understand Why:</strong> Read the explanations for why each project failed to schedule and identify bottlenecks.</li>
+                </ul>
+
+                <h3>Portfolio Settings Tab</h3>
+                <p>Configure planning parameters that control how the scheduling algorithm works:</p>
+                <ul>
+                    <li><strong>Planning Start/End:</strong> Set the time window for planning (leave end date blank for open-ended planning).</li>
+                    <li><strong>KTLO Percentages:</strong> Set "Keep The Lights On" allocation percentages by role (time reserved for ongoing work).</li>
+                    <li><strong>Max Concurrent Projects:</strong> Limit how many projects a person can work on simultaneously by role.</li>
+                    <li><strong>Planner Cap:</strong> Maximum percentage of a planner's time that can be allocated to a single project per month.</li>
+                    <li><strong>Effort Curves:</strong> Define how effort is distributed over project duration (uniform, bell curve, front-loaded, etc.).</li>
+                    <li><strong>Priority-Based Scheduling:</strong> Enable to schedule higher priority projects first.</li>
+                    <li><strong>Overbooking Tolerance:</strong> Allow slight overbooking (e.g., 20% means 120% allocation is acceptable).</li>
+                </ul>
+
+                <h3>People Tab</h3>
+                <h4>Staff Subtab</h4>
+                <ul>
+                    <li><strong>View Team:</strong> See all people organized by their roles (BA, Planner, Dev).</li>
+                    <li><strong>Add Person:</strong> Click "+ Add Person" to add a new team member. Specify name, roles, active status, start/end dates, skillsets, and preferred programs.</li>
+                    <li><strong>Edit Person:</strong> Click the edit icon on any person card to modify their details.</li>
+                    <li><strong>Delete Person:</strong> Click the trash icon to remove a person (be careful - this affects resource availability).</li>
+                    <li><strong>Skillsets:</strong> Add skills to match project requirements (e.g., "front-end", "back-end", "security").</li>
+                    <li><strong>Preferred Programs:</strong> Optionally specify which programs a person prefers to work on.</li>
+                </ul>
+
+                <h4>Resource Allocation Subtab</h4>
+                <ul>
+                    <li><strong>View Heatmap:</strong> After running the model, see a color-coded heatmap of resource allocation by person and month.</li>
+                    <li><strong>Expand/Collapse:</strong> Click on role names to expand and see individual people, or click person names to see their project-level allocations.</li>
+                    <li><strong>Color Coding:</strong> Blue shades indicate allocation levels (light = low, dark = high). Red indicates overallocation (&gt;100%).</li>
+                    <li><strong>KTLO Tracking:</strong> See KTLO allocations separately from project work.</li>
+                </ul>
+
+                <h3>Modeller Tab</h3>
+                <p>Run the capacity planning algorithm:</p>
+                <ol>
+                    <li>Select a portfolio from the dropdown</li>
+                    <li>Ensure your projects, people, and settings are configured</li>
+                    <li>Click "Run Model" to start the scheduling algorithm</li>
+                    <li>Monitor job status in the "Recent Jobs" table</li>
+                    <li>When complete, view results in the Projects → Timeline and People → Resource Allocation tabs</li>
+                </ol>
+
+                <h3>Files Tab</h3>
+                <p>Direct access to portfolio input and output files:</p>
+                <ul>
+                    <li><strong>Input Files:</strong> projects.csv, people.json, config.json, programs.csv</li>
+                    <li><strong>Output Files:</strong> project_timeline.csv, resource_capacity.csv, unallocated_projects.md</li>
+                    <li>Click on any file to download or view it</li>
+                </ul>
+
+                <h3>Best Practices</h3>
+                <ul>
+                    <li><strong>Start with Sample Data:</strong> Create a new portfolio to get familiar with the data structure before customizing.</li>
+                    <li><strong>Set Realistic KTLO:</strong> Reserve 10-20% of time for ongoing operational work.</li>
+                    <li><strong>Use Priorities:</strong> Assign priority numbers to projects so critical work gets scheduled first.</li>
+                    <li><strong>Match Skills:</strong> Ensure people have skillsets that match project requirements.</li>
+                    <li><strong>Review Unallocated:</strong> After running the model, check the Unallocated tab to understand capacity constraints.</li>
+                    <li><strong>Iterate:</strong> Adjust priorities, effort estimates, or team composition based on results, then re-run the model.</li>
+                </ul>
+
+                <h3>Tips</h3>
+                <ul>
+                    <li>Changes to projects, people, and settings are saved immediately - no need to run the model to persist edits.</li>
+                    <li>The model must be re-run after making changes to see updated timeline and allocation results.</li>
+                    <li>Use program colors to visually organize related projects.</li>
+                    <li>The resource allocation heatmap helps identify overallocated team members.</li>
+                    <li>Project IDs must be unique within a portfolio.</li>
+                </ul>
+
+                <h3>Troubleshooting</h3>
+                <ul>
+                    <li><strong>Projects not scheduling:</strong> Check if you have enough people with the required skills and availability.</li>
+                    <li><strong>Overallocation:</strong> Increase team size, reduce project scope, extend timelines, or adjust KTLO percentages.</li>
+                    <li><strong>Model errors:</strong> Verify all required fields are filled in projects.csv, people.json, and config.json.</li>
+                    <li><strong>Missing results:</strong> Ensure the model completed successfully by checking the Recent Jobs table.</li>
+                </ul>
+
+                <h3>Data Format Notes</h3>
+                <ul>
+                    <li><strong>Dates:</strong> Use ISO format (YYYY-MM-DD) for all dates.</li>
+                    <li><strong>Effort:</strong> Specified in person-months (e.g., 2.5 = 2.5 months of one person's time).</li>
+                    <li><strong>Skillsets:</strong> Separate multiple skills with semicolons or use JSON array format.</li>
+                    <li><strong>Programs:</strong> Optional - projects can exist without being assigned to a program.</li>
+                </ul>
             </div>
         </div>
     </div>
