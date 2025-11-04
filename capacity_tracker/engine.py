@@ -411,6 +411,10 @@ def _allocate_month(
             "reason": "concurrency_limit_zero",
             "needed_skillsets": sorted(needed_skillsets),
         }
+        # In aggressive mode, track the issue but don't fail
+        if aggressive_mode:
+            detail["aggressive_override"] = True
+            return True, assignments, detail
         return False, assignments, detail
     candidates = available_by_role_month.get(role, {}).get(month_idx, [])
     if not candidates:
@@ -423,6 +427,10 @@ def _allocate_month(
             "reason": "no_available_people",
             "needed_skillsets": sorted(needed_skillsets),
         }
+        # In aggressive mode, track the issue but don't fail
+        if aggressive_mode:
+            detail["aggressive_override"] = True
+            return True, assignments, detail
         return False, assignments, detail
     candidate_entries: List[Dict[str, object]] = []
     detail_available: List[Dict[str, object]] = []

@@ -1,4 +1,5 @@
 {
+  "allocation_mode": "aggressive",
   "curves": {
     "ba_curve": [
       0.1,

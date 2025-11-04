@@ -38,6 +38,7 @@
   let configDirty = false;
   let configErrors = {};
   let configLoadedPortfolio = null;
+  let modellerConfigCache = null;
 
   function setStatus(text) {
     if (statusMessageEl) {
@@ -571,6 +572,7 @@
       }
       resetProgramsState();
       resetConfigState();
+      modellerConfigCache = null;
       cachedTimelineData = null;
       cachedTimelinePortfolio = null;
       cachedUnallocatedHtml = null;
@@ -793,6 +795,8 @@
         loadProjects();
       } else if (targetTab === 'settings') {
         loadConfig();
+      } else if (targetTab === 'modelling') {
+        loadModellerSettings();
       }
     });
   });
@@ -2171,6 +2175,8 @@
         loadProjects();
       } else if (activeTab && activeTab.dataset.tab === 'settings') {
         loadConfig();
+      } else if (activeTab && activeTab.dataset.tab === 'modelling') {
+        loadModellerSettings();
       }
     });
   }
@@ -3464,6 +3470,168 @@
     renderConfigForm();
     updateConfigUnsavedIndicator();
   }
+
+  // Modeller Settings Display
+  async function loadModellerSettings() {
+    const container = document.getElementById('modeller-settings-container');
+    if (!container) return;
+
+    if (!selectedPortfolio) {
+      container.innerHTML = '<div class="info-text">Please select a portfolio to configure the model.</div>';
+      return;
+    }
+
+    // Try to use cached config if available, otherwise fetch
+    let config = modellerConfigCache;
+    if (!config || modellerConfigCache?.portfolio !== selectedPortfolio) {
+      try {
+        const response = await fetch(`/api/config/${selectedPortfolio}`);
+        if (!response.ok) {
+          container.innerHTML = '<div class="info-text" style="color: var(--danger-color);">Error loading settings. Please check Portfolio Settings.</div>';
+          return;
+        }
+        config = await response.json();
+        modellerConfigCache = { portfolio: selectedPortfolio, data: config };
+      } catch (err) {
+        console.error('Error loading config for modeller:', err);
+        container.innerHTML = '<div class="info-text" style="color: var(--danger-color);">Error loading settings.</div>';
+        return;
+      }
+    } else {
+      config = modellerConfigCache.data;
+    }
+
+    const allocationMode = config.allocation_mode || 'strict';
+    const planningStart = config.planning_start || 'Not set';
+    const planningEnd = config.planning_end === null || config.planning_end === undefined ? 'Open-ended' : (config.planning_end || 'Not set');
+    const ktloMap = config.ktlo_pct_by_role || {};
+    const curves = config.curves || {};
+
+    let html = '<div class="config-section" style="margin-bottom: 1.5rem;">';
+    html += '<h3 style="margin-top: 0;">Model Configuration</h3>';
+
+    // Allocation Mode Selector
+    html += '<div class="form-group" style="margin-bottom: 1.5rem;">';
+    html += '<label for="modeller-allocation-mode-select" style="font-size: 1rem; margin-bottom: 0.75rem;">Allocation Mode</label>';
+    html += `<select id="modeller-allocation-mode-select" style="font-size: 1rem; padding: 0.75rem;">`;
+    html += `<option value="strict" ${allocationMode === 'strict' ? 'selected' : ''}>Strict (capacity limits enforced)</option>`;
+    html += `<option value="aggressive" ${allocationMode === 'aggressive' ? 'selected' : ''}>Aggressive (schedule all, show hiring needs)</option>`;
+    html += '</select>';
+    html += '<div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">';
+    html += '<strong>Strict mode:</strong> Only schedules projects that fit within current team capacity.<br>';
+    html += '<strong>Aggressive mode:</strong> Schedules all projects and generates hiring recommendations for over-allocated resources.';
+    html += '</div>';
+    html += '</div>';
+
+    // Settings Summary
+    html += '<div style="background: var(--gray-50); padding: 1rem; border-radius: var(--border-radius); border: 1px solid var(--gray-200);">';
+    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">';
+    html += '<h4 style="margin: 0; font-size: 0.95rem; color: var(--gray-800);">Current Constraints</h4>';
+    html += '<button class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" onclick="switchToSettingsTab()">Edit Settings →</button>';
+    html += '</div>';
+
+    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; font-size: 0.85rem;">';
+
+    // Planning Period
+    html += '<div>';
+    html += '<div style="color: var(--gray-600); font-weight: 600;">Planning Period</div>';
+    html += `<div style="color: var(--gray-900);">${planningStart} → ${planningEnd}</div>`;
+    html += '</div>';
+
+    // KTLO Summary
+    html += '<div>';
+    html += '<div style="color: var(--gray-600); font-weight: 600;">KTLO Percentages</div>';
+    const ktloEntries = Object.entries(ktloMap);
+    if (ktloEntries.length > 0) {
+      html += '<div style="color: var(--gray-900);">';
+      ktloEntries.slice(0, 3).forEach(([role, pct]) => {
+        html += `${role}: ${(pct * 100).toFixed(0)}%<br>`;
+      });
+      if (ktloEntries.length > 3) {
+        html += `<span style="color: var(--gray-500);">+${ktloEntries.length - 3} more...</span>`;
+      }
+      html += '</div>';
+    } else {
+      html += '<div style="color: var(--gray-500);">None configured</div>';
+    }
+    html += '</div>';
+
+    // Curves Summary
+    html += '<div>';
+    html += '<div style="color: var(--gray-600); font-weight: 600;">Effort Curves</div>';
+    const curveEntries = Object.entries(curves);
+    if (curveEntries.length > 0) {
+      html += `<div style="color: var(--gray-900);">${curveEntries.length} curve(s) defined</div>`;
+    } else {
+      html += '<div style="color: var(--gray-500);">None configured</div>';
+    }
+    html += '</div>';
+
+    // Planner Cap
+    const plannerCap = config.planner_project_month_cap_pct;
+    if (plannerCap !== undefined && plannerCap !== null) {
+      html += '<div>';
+      html += '<div style="color: var(--gray-600); font-weight: 600;">Planner Cap</div>';
+      html += `<div style="color: var(--gray-900);">${(plannerCap * 100).toFixed(0)}% per project/month</div>`;
+      html += '</div>';
+    }
+
+    html += '</div>'; // end grid
+    html += '</div>'; // end summary box
+    html += '</div>'; // end config-section
+
+    container.innerHTML = html;
+
+    // Add event listener for allocation mode changes
+    const modeSelect = document.getElementById('modeller-allocation-mode-select');
+    if (modeSelect) {
+      modeSelect.addEventListener('change', async (e) => {
+        const newMode = e.target.value;
+        try {
+          // Update the config
+          const updateResponse = await fetch(`/api/config/${selectedPortfolio}`);
+          if (!updateResponse.ok) {
+            alert('Failed to load current config');
+            return;
+          }
+          const currentConfig = await updateResponse.json();
+          currentConfig.allocation_mode = newMode;
+
+          const saveResponse = await fetch(`/api/config/${selectedPortfolio}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentConfig)
+          });
+
+          if (!saveResponse.ok) {
+            alert('Failed to save allocation mode');
+            return;
+          }
+
+          // Update cache
+          modellerConfigCache = { portfolio: selectedPortfolio, data: currentConfig };
+
+          // Update configData if it's loaded
+          if (configData && configLoadedPortfolio === selectedPortfolio) {
+            configData.allocation_mode = newMode;
+            originalConfigData.allocation_mode = newMode;
+          }
+
+          setStatus(`Allocation mode updated to ${newMode}`);
+        } catch (err) {
+          console.error('Error updating allocation mode:', err);
+          alert('Failed to update allocation mode');
+        }
+      });
+    }
+  }
+
+  window.switchToSettingsTab = function() {
+    const settingsTab = document.querySelector('.tab[data-tab="settings"]');
+    if (settingsTab) {
+      settingsTab.click();
+    }
+  };
 
   const saveConfigBtn = document.getElementById('save-config-btn');
   if (saveConfigBtn) {
