@@ -31,5 +31,6 @@
   "planning_end": null,
   "planning_start": "2025-01-01",
   "random_seed": 42,
-  "planner_project_month_cap_pct": 0.2
+  "planner_project_month_cap_pct": 0.2,
+  "allocation_mode": "aggressive"
 }
