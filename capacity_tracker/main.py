@@ -130,6 +130,102 @@ def _format_available(detail: Dict[str, object]) -> Optional[str]:
     return ", ".join(entries)
 
 
+def _write_recommendations_markdown(hiring_analysis: Dict[str, object], outdir: Path) -> None:
+    """Generate resourcing recommendations markdown with narrative and chart data."""
+    import json
+
+    path = outdir / "resourcing_recommendations.md"
+    lines: List[str] = ["# Resourcing Recommendations", ""]
+
+    summary = hiring_analysis.get("summary", {})
+    recommendations = hiring_analysis.get("recommendations", [])
+    capacity_vs_demand = hiring_analysis.get("capacity_vs_demand", {})
+    skill_bottlenecks = hiring_analysis.get("skill_bottlenecks", [])
+
+    # Executive Summary
+    lines.append("## Executive Summary")
+    lines.append("")
+    if not recommendations:
+        lines.append("No additional hiring needs identified. All projects fit within current capacity.")
+    else:
+        total_roles = summary.get("total_roles_affected", 0)
+        total_recs = summary.get("total_recommendations", 0)
+        lines.append(f"Based on the aggressive allocation analysis, **{total_recs} hiring recommendation(s)** have been identified across **{total_roles} role(s)**.")
+        lines.append("")
+
+        # Calculate total hires
+        total_hires = sum(rec.get("hires_needed", 0) for rec in recommendations)
+        lines.append(f"**Recommended hires:** {total_hires} total")
+        lines.append("")
+
+        for rec in recommendations:
+            role = rec.get("role", "Unknown")
+            hires = rec.get("hires_needed", 0)
+            peak_month = rec.get("peak_month", "")
+            skills = rec.get("needed_skills", [])
+            skill_text = f" with skills: {', '.join(skills)}" if skills else ""
+            lines.append(f"- **{role}:** {hires} hire(s) needed by {peak_month}{skill_text}")
+        lines.append("")
+
+    # Skill Bottlenecks
+    if skill_bottlenecks:
+        lines.append("## Skill Bottlenecks")
+        lines.append("")
+        lines.append("The following projects experienced skill mismatches or capacity constraints:")
+        lines.append("")
+
+        for bottleneck in skill_bottlenecks[:10]:  # Limit to top 10
+            project = bottleneck.get("project_name", "Unknown")
+            role = bottleneck.get("role", "")
+            month = bottleneck.get("month_label", "")
+            reason = bottleneck.get("reason", "")
+            skills = bottleneck.get("needed_skillsets", [])
+
+            lines.append(f"- **{project}** ({month})")
+            lines.append(f"  - Role: {role}")
+            lines.append(f"  - Issue: {reason}")
+            if skills:
+                lines.append(f"  - Required skills: {', '.join(skills)}")
+            lines.append("")
+
+    # Detailed Recommendations by Role
+    if recommendations:
+        lines.append("## Detailed Hiring Recommendations")
+        lines.append("")
+
+        for rec in recommendations:
+            role = rec.get("role", "Unknown")
+            hires = rec.get("hires_needed", 0)
+            peak_month = rec.get("peak_month", "")
+            peak_pct = rec.get("peak_overallocation_pct", 0)
+            total_shortfall = rec.get("total_shortfall_pm", 0)
+            affected_months = rec.get("affected_months", [])
+            skills = rec.get("needed_skills", [])
+
+            lines.append(f"### {role}")
+            lines.append("")
+            lines.append(f"**Recommendation:** Hire {hires} {role}(s) by {peak_month}")
+            lines.append("")
+            lines.append(f"- **Peak over-allocation:** {peak_pct}% in {peak_month}")
+            lines.append(f"- **Total shortfall:** {total_shortfall} person-months")
+            lines.append(f"- **Affected period:** {', '.join(affected_months)}")
+            if skills:
+                lines.append(f"- **Required skills:** {', '.join(skills)}")
+            lines.append("")
+
+    # Capacity vs Demand Chart Data
+    lines.append("## Capacity vs Demand Analysis")
+    lines.append("")
+    lines.append("The following chart data shows capacity (supply) vs demand by role over time:")
+    lines.append("")
+    lines.append("```json")
+    lines.append(json.dumps(capacity_vs_demand, indent=2))
+    lines.append("```")
+    lines.append("")
+
+    path.write_text("\n".join(lines))
+
+
 def _write_skipped_markdown(skipped: List[Dict[str, object]], outdir: Path) -> None:
     path = outdir / "unallocated_projects.md"
     lines: List[str] = ["# Unallocated Projects", ""]
@@ -180,7 +276,7 @@ def main() -> None:
         cfg = replace(cfg, random_seed=args.seed)
     _configure_logging(cfg.logging_level)
     try:
-        project_timeline_df, resource_capacity_df = engine.plan(
+        project_timeline_df, resource_capacity_df, hiring_analysis = engine.plan(
             projects_df, people_df, cfg, strict=args.strict
         )
     except UnschedulableProjectError as exc:
@@ -202,6 +298,12 @@ def main() -> None:
     print(f"Wrote {timeline_path}")
     print(f"Wrote {capacity_path}")
     print(f"Wrote {outdir_path / 'unallocated_projects.md'}")
+
+    # Write hiring recommendations if in aggressive mode
+    if hiring_analysis:
+        _write_recommendations_markdown(hiring_analysis, outdir_path)
+        print(f"Wrote {outdir_path / 'resourcing_recommendations.md'}")
+
     if skipped:
         print("Skipped projects:")
         for item in skipped:

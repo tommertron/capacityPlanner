@@ -39,11 +39,11 @@ class MonthlyState:
     def remaining_capacity(self) -> float:
         return self.capacity_limit - self.project_alloc_pct
 
-    def assign(self, project_id: str, role: str, share: float) -> None:
+    def assign(self, project_id: str, role: str, share: float, *, allow_overallocation: bool = False) -> None:
         if share <= 0:
             return
         remaining = self.remaining_capacity()
-        if share > remaining + EPSILON:
+        if share > remaining + EPSILON and not allow_overallocation:
             raise ValueError("allocation exceeds remaining capacity")
         role_allocations = self.allocations.setdefault(project_id, {})
         role_allocations[role] = role_allocations.get(role, 0.0) + share
@@ -398,6 +398,7 @@ def _allocate_month(
     planner_month_cap: float,
     is_high_priority: bool = False,
     overbooking_tolerance: float = 0.0,
+    aggressive_mode: bool = False,
 ) -> Tuple[bool, List[Tuple[str, int, str, float]], Optional[Dict[str, object]]]:
     assignments: List[Tuple[str, int, str, float]] = []
     if max_assignments <= 0:
@@ -442,32 +443,72 @@ def _allocate_month(
                 "matches_required": matches_required,
             }
         )
-        if remaining_capacity <= EPSILON or not matches_required:
-            continue
-        candidate_entries.append(
-            {
-                "name": name,
-                "state": state,
-                "covers_needed": covers_needed or not needed_skillsets,
-                "pref_match": pref_match,
-                "skills": skills,
-            }
-        )
-    if not candidate_entries:
-        if required_skillsets and not any(item.get("matches_required") for item in detail_available):
-            reason_code = "skillset_unavailable"
+        # In aggressive mode, include candidates even without skill match or capacity
+        if aggressive_mode:
+            if remaining_capacity > EPSILON or not matches_required:
+                candidate_entries.append(
+                    {
+                        "name": name,
+                        "state": state,
+                        "covers_needed": covers_needed or not needed_skillsets,
+                        "pref_match": pref_match,
+                        "skills": skills,
+                        "skill_mismatch": not matches_required,
+                    }
+                )
         else:
-            reason_code = "no_capacity_remaining"
-        detail = {
-            "role": role,
-            "month_idx": month_idx,
-            "demand": demand,
-            "available": detail_available,
-            "allocations": [],
-            "reason": reason_code,
-            "needed_skillsets": sorted(needed_skillsets),
-        }
-        return False, assignments, detail
+            if remaining_capacity <= EPSILON or not matches_required:
+                continue
+            candidate_entries.append(
+                {
+                    "name": name,
+                    "state": state,
+                    "covers_needed": covers_needed or not needed_skillsets,
+                    "pref_match": pref_match,
+                    "skills": skills,
+                }
+            )
+    if not candidate_entries:
+        # In aggressive mode, if we have no candidates with capacity/skills, add everyone anyway
+        if aggressive_mode and candidates:
+            for name in candidates:
+                state = person_states.get(name, {}).get(month_idx)
+                if state is None:
+                    continue
+                skills = person_skillsets.get(name, set())
+                matches_required = not required_skillsets or bool(skills & required_skillsets)
+                covers_needed = bool(needed_skillsets and (skills & needed_skillsets))
+                pref_match = parent_summary and parent_summary in person_preferences.get(name, set())
+                candidate_entries.append(
+                    {
+                        "name": name,
+                        "state": state,
+                        "covers_needed": covers_needed or not needed_skillsets,
+                        "pref_match": pref_match,
+                        "skills": skills,
+                        "skill_mismatch": not matches_required,
+                    }
+                )
+
+        if not candidate_entries:
+            if required_skillsets and not any(item.get("matches_required") for item in detail_available):
+                reason_code = "skillset_unavailable"
+            else:
+                reason_code = "no_capacity_remaining"
+            detail = {
+                "role": role,
+                "month_idx": month_idx,
+                "demand": demand,
+                "available": detail_available,
+                "allocations": [],
+                "reason": reason_code,
+                "needed_skillsets": sorted(needed_skillsets),
+            }
+            # In aggressive mode, don't fail - just track the issue
+            if aggressive_mode:
+                detail["aggressive_override"] = True
+            else:
+                return False, assignments, detail
     candidate_entries.sort(
         key=lambda item: _candidate_sort_key(
             item["name"],
@@ -493,14 +534,20 @@ def _allocate_month(
             limit_blocked = True
             continue
         available = state.remaining_capacity()
-        if available <= EPSILON:
-            continue
-        share = min(available, remaining)
-        if role == "Planner":
-            share = min(share, planner_month_cap)
-        if share <= EPSILON:
-            continue
-        state.assign(project_id, role, share)
+        # In aggressive mode, assign even if no capacity, use demand instead
+        if aggressive_mode and available <= EPSILON:
+            share = min(remaining, 0.1)  # Assign at least 10% or remaining demand
+            if role == "Planner":
+                share = min(share, planner_month_cap)
+        else:
+            if available <= EPSILON:
+                continue
+            share = min(available, remaining)
+            if role == "Planner":
+                share = min(share, planner_month_cap)
+            if share <= EPSILON:
+                continue
+        state.assign(project_id, role, share, allow_overallocation=aggressive_mode)
         assignments.append((name, month_idx, role, share))
         role_people[role].add(name)
         if not already_assigned and share > EPSILON:
@@ -530,6 +577,10 @@ def _allocate_month(
             "shortfall": remaining,
             "needed_skillsets": sorted(needed_skillsets),
         }
+        # In aggressive mode, always succeed but track the issue
+        if aggressive_mode:
+            detail["aggressive_override"] = True
+            return True, assignments, detail
         return False, assignments, detail
     return True, assignments, None
 
@@ -549,13 +600,137 @@ def _format_people(names: Iterable[str]) -> str:
     return ";".join(unique)
 
 
+def analyze_hiring_needs(
+    allocation_issues: List[Dict[str, object]],
+    role_month_capacity: Dict[str, List[float]],
+    person_states: Dict[str, Dict[int, MonthlyState]],
+    month_keys: Sequence[str],
+    cfg: PlanningConfig,
+) -> Dict[str, object]:
+    """
+    Analyze allocation issues to generate hiring recommendations.
+    Returns a structured report with:
+    - Summary statistics
+    - Over-allocation by role and time period
+    - Specific hiring recommendations
+    - Capacity vs demand data for charts
+    """
+    from collections import defaultdict
+
+    # Aggregate over-allocations by role and month
+    overalloc_by_role_month: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    skill_bottlenecks: List[Dict[str, object]] = []
+
+    for issue in allocation_issues:
+        issue_type = issue.get("type", "unknown")
+
+        if issue_type == "overallocation":
+            role = issue.get("role", "Unknown")
+            month_label = issue.get("month_label", "")
+            overalloc_pct = float(issue.get("overallocation_pct", 0.0))
+            overalloc_by_role_month[role][month_label] += overalloc_pct
+
+        elif issue.get("aggressive_override"):
+            # Track skill/capacity bottlenecks
+            skill_bottlenecks.append({
+                "project_id": issue.get("project_id"),
+                "project_name": issue.get("project_name"),
+                "role": issue.get("role"),
+                "month_label": issue.get("month_label"),
+                "reason": issue.get("reason"),
+                "shortfall": issue.get("shortfall", 0.0),
+                "needed_skillsets": issue.get("needed_skillsets", []),
+            })
+
+    # Calculate capacity vs demand by role over time
+    capacity_vs_demand: Dict[str, List[Dict[str, object]]] = {}
+    for role in cfg.iter_roles():
+        role_data: List[Dict[str, object]] = []
+        capacities = role_month_capacity.get(role, [])
+
+        for month_idx, month_label in enumerate(month_keys):
+            capacity = capacities[month_idx] if month_idx < len(capacities) else 0.0
+            # Calculate role-specific demand from person_states
+            demand = 0.0
+            for person_name, states in person_states.items():
+                state = states.get(month_idx)
+                if state:
+                    # Sum allocations for this specific role across all projects
+                    for project_id, role_shares in state.allocations.items():
+                        demand += role_shares.get(role, 0.0)
+
+            overalloc = overalloc_by_role_month[role].get(month_label, 0.0)
+
+            role_data.append({
+                "month": month_label,
+                "capacity": round(capacity, 2),
+                "demand": round(demand, 2),
+                "gap": round(demand - capacity, 2),
+                "overallocation": round(overalloc, 2),
+            })
+
+        capacity_vs_demand[role] = role_data
+
+    # Generate hiring recommendations
+    recommendations: List[Dict[str, object]] = []
+    for role, month_data in overalloc_by_role_month.items():
+        if not month_data:
+            continue
+
+        # Find peak over-allocation
+        peak_month = max(month_data.items(), key=lambda x: x[1])
+        peak_month_label = peak_month[0]
+        peak_overalloc = peak_month[1]
+
+        # Calculate total shortfall
+        total_shortfall = sum(month_data.values())
+        avg_shortfall = total_shortfall / len(month_data) if month_data else 0.0
+
+        # Determine number of hires needed (rough estimate)
+        ktlo = cfg.ktlo_for_role(role)
+        effective_capacity_per_person = 1.0 - ktlo
+        hires_needed = max(1, math.ceil(avg_shortfall / effective_capacity_per_person))
+
+        # Find skills needed for this role from bottlenecks
+        needed_skills: Set[str] = set()
+        for bottleneck in skill_bottlenecks:
+            if bottleneck.get("role") == role:
+                skills = bottleneck.get("needed_skillsets", [])
+                needed_skills.update(skills)
+
+        recommendations.append({
+            "role": role,
+            "hires_needed": hires_needed,
+            "peak_month": peak_month_label,
+            "peak_overallocation_pct": round(peak_overalloc * 100, 1),
+            "avg_shortfall_pm": round(avg_shortfall, 2),
+            "total_shortfall_pm": round(total_shortfall, 2),
+            "needed_skills": sorted(needed_skills),
+            "affected_months": sorted(month_data.keys()),
+        })
+
+    # Sort recommendations by severity (total shortfall)
+    recommendations.sort(key=lambda x: x["total_shortfall_pm"], reverse=True)
+
+    return {
+        "summary": {
+            "total_roles_affected": len(overalloc_by_role_month),
+            "total_bottlenecks": len(skill_bottlenecks),
+            "total_recommendations": len(recommendations),
+        },
+        "recommendations": recommendations,
+        "capacity_vs_demand": capacity_vs_demand,
+        "skill_bottlenecks": skill_bottlenecks,
+    }
+
+
 def plan(
     projects_df: pd.DataFrame,
     people_df: pd.DataFrame,
     cfg: PlanningConfig,
     *,
     strict: bool = False,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[Dict[str, object]]]:
     roles = tuple(cfg.iter_roles())
     projects = _projects_from_df(projects_df)
     people = _people_from_df(people_df)
@@ -579,6 +754,9 @@ def plan(
 
     scheduled_records: List[Dict[str, object]] = []
     skipped_projects: List[Dict[str, object]] = []
+    allocation_issues: List[Dict[str, object]] = []  # Track issues for aggressive mode
+
+    aggressive_mode = cfg.allocation_mode == "aggressive"
 
     # Sort projects by priority if enabled (lower priority number = higher priority)
     if cfg.priority_based_scheduling:
@@ -724,7 +902,18 @@ def plan(
                             cfg.planner_project_month_cap_pct,
                             is_high_priority,
                             cfg.overbooking_tolerance_pct,
+                            aggressive_mode,
                         )
+                        # Track issues in aggressive mode
+                        if aggressive_mode and failure_detail and failure_detail.get("aggressive_override"):
+                            allocation_issues.append({
+                                "project_id": project.id,
+                                "project_name": project.name,
+                                "role": role,
+                                "month_idx": month_idx,
+                                "month_label": month_keys[month_idx],
+                                **failure_detail,
+                            })
                         assignments_record.extend(assignments)
                         if not success:
                             _rollback_assignments(project.id, assignments_record, person_states)
@@ -865,8 +1054,22 @@ def plan(
         states = person_states[name]
         for month_idx, state in sorted(states.items()):
             total_pct = state.total_pct
+            # In aggressive mode, allow over-allocation and track it
             if total_pct > 1.0 + EPSILON:
-                raise ValueError(f"allocation exceeds capacity for {name} in {month_keys[month_idx]}")
+                if aggressive_mode:
+                    person_roles = person_roles_map.get(name, set())
+                    for role_name in person_roles:
+                        allocation_issues.append({
+                            "type": "overallocation",
+                            "person": name,
+                            "role": role_name,
+                            "month_idx": month_idx,
+                            "month_label": month_keys[month_idx],
+                            "allocated_pct": total_pct,
+                            "overallocation_pct": total_pct - 1.0,
+                        })
+                else:
+                    raise ValueError(f"allocation exceeds capacity for {name} in {month_keys[month_idx]}")
             allocations_map = state.allocations
             month_label = month_keys[month_idx]
             ktlo_value = round(state.ktlo_pct, 4)
@@ -912,4 +1115,17 @@ def plan(
         ],
     )
     resource_capacity_df.attrs["skipped_projects"] = skipped_projects
-    return project_timeline_df, resource_capacity_df
+    resource_capacity_df.attrs["allocation_issues"] = allocation_issues
+
+    # Analyze hiring needs if in aggressive mode
+    hiring_analysis: Optional[Dict[str, object]] = None
+    if aggressive_mode and allocation_issues:
+        hiring_analysis = analyze_hiring_needs(
+            allocation_issues,
+            role_month_capacity,
+            person_states,
+            month_keys,
+            cfg,
+        )
+
+    return project_timeline_df, resource_capacity_df, hiring_analysis

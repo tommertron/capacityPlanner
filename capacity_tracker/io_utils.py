@@ -238,6 +238,12 @@ def load_config(path: str | Path) -> PlanningConfig:
     if not (0 <= overbooking_tolerance_pct <= 1):
         raise ValueError("overbooking_tolerance_pct must be in [0, 1]")
 
+    allocation_mode = data.get("allocation_mode", "strict")
+    if not isinstance(allocation_mode, str):
+        raise ValueError("allocation_mode must be a string")
+    if allocation_mode not in ("strict", "aggressive"):
+        raise ValueError("allocation_mode must be either 'strict' or 'aggressive'")
+
     return PlanningConfig(
         planning_start=planning_start,
         planning_end=planning_end,
@@ -251,6 +257,7 @@ def load_config(path: str | Path) -> PlanningConfig:
         priority_based_scheduling=priority_based_scheduling,
         high_priority_threshold=high_priority_threshold,
         overbooking_tolerance_pct=overbooking_tolerance_pct,
+        allocation_mode=allocation_mode,
     )
 
 

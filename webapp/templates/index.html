@@ -1291,6 +1291,7 @@
                 <button class="subtab active" data-subtab="people-staff">Staff</button>
                 <button class="subtab" data-subtab="people-skills">Skills</button>
                 <button class="subtab" data-subtab="people-allocation">Resource Allocation</button>
+                <button class="subtab" data-subtab="people-recommendations">Resourcing Recommendations</button>
             </div>
 
             <div id="people-staff" class="subtab-content active">
@@ -1316,6 +1317,12 @@
             <div id="people-allocation" class="subtab-content">
                 <div id="resource-allocation-container">
                     <div class="empty-state">Select a portfolio to view resource allocation</div>
+                </div>
+            </div>
+
+            <div id="people-recommendations" class="subtab-content">
+                <div id="resourcing-recommendations-container">
+                    <div class="empty-state">Select a portfolio and run the model in aggressive mode to view hiring recommendations</div>
                 </div>
             </div>
         </div>
@@ -1699,6 +1706,9 @@
 <script>
     window.initialJobs = {{ jobs|tojson }};
 </script>
+<!-- External libraries for recommendations tab -->
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
 </html>

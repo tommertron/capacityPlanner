@@ -83,6 +83,7 @@ class PlanningConfig:
     priority_based_scheduling: bool = True
     high_priority_threshold: int = 10
     overbooking_tolerance_pct: float = 0.20
+    allocation_mode: str = "strict"  # "strict" or "aggressive"
 
     def get_curve_spec(self, key: str) -> object:
         if key not in self.curves:

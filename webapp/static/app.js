@@ -3244,6 +3244,16 @@
     const loggingPath = encodeConfigPath(['logging_level']);
     html += `<input id="logging-level-input" type="text" data-field="logging_level" data-config-path="${loggingPath}" data-type="string" value="${configData.logging_level ?? ''}">`;
     html += '</div>';
+    html += '<div class="form-group">';
+    html += '<label for="allocation-mode-select">Allocation Mode</label>';
+    const allocationModePath = encodeConfigPath(['allocation_mode']);
+    const allocationMode = configData.allocation_mode || 'strict';
+    html += `<select id="allocation-mode-select" data-field="allocation_mode" data-config-path="${allocationModePath}" data-type="string">`;
+    html += `<option value="strict" ${allocationMode === 'strict' ? 'selected' : ''}>Strict (capacity limits enforced)</option>`;
+    html += `<option value="aggressive" ${allocationMode === 'aggressive' ? 'selected' : ''}>Aggressive (schedule all, show hiring needs)</option>`;
+    html += '</select>';
+    html += '<small style="color: var(--gray-500); margin-top: 0.25rem; display: block;">Aggressive mode over-allocates resources and generates hiring recommendations</small>';
+    html += '</div>';
     html += '</div>';
     html += '</div>';
 
@@ -4283,4 +4293,167 @@
 
   updateProjectProgramFilterOptions();
   updateTimelineProgramFilterOptions([]);
+
+  // Resourcing Recommendations
+  let recommendationsChart = null;
+
+  async function loadResourcingRecommendations() {
+    const container = document.getElementById('resourcing-recommendations-container');
+    if (!container) return;
+
+    if (!selectedPortfolio) {
+      container.innerHTML = '<div class="empty-state">Select a portfolio to view recommendations</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="empty-state">Loading recommendations...</div>';
+
+    try {
+      const response = await fetch(`/files/${selectedPortfolio}/output/resourcing_recommendations.md`);
+      if (!response.ok) {
+        container.innerHTML = '<div class="empty-state">No recommendations available. Run the model in <strong>aggressive mode</strong> to generate hiring recommendations.</div>';
+        return;
+      }
+
+      const markdownText = await response.text();
+
+      // Parse out JSON chart data if present
+      const jsonMatch = markdownText.match(/```json\n([\s\S]*?)\n```/);
+      let chartData = null;
+      let contentWithoutJson = markdownText;
+
+      if (jsonMatch) {
+        try {
+          chartData = JSON.parse(jsonMatch[1]);
+          // Remove JSON block from markdown
+          contentWithoutJson = markdownText.replace(/## Capacity vs Demand Analysis[\s\S]*$/, '');
+        } catch (e) {
+          console.error('Failed to parse chart data:', e);
+        }
+      }
+
+      // Render markdown using marked.js
+      const htmlContent = marked.parse(contentWithoutJson);
+
+      let html = `<div class="markdown-body" style="padding: 1rem;">${htmlContent}</div>`;
+
+      // Add chart section if data is available
+      if (chartData) {
+        html += '<div style="padding: 1rem;"><h2>Capacity vs Demand Chart</h2>';
+        html += '<div><canvas id="recommendations-chart" style="max-height: 400px;"></canvas></div>';
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+
+      // Render chart if data is available
+      if (chartData) {
+        renderRecommendationsChart(chartData);
+      }
+    } catch (err) {
+      console.error('Error loading recommendations:', err);
+      container.innerHTML = '<div class="empty-state">Error loading recommendations</div>';
+    }
+  }
+
+  function renderRecommendationsChart(chartData) {
+    // Destroy existing chart if any
+    if (recommendationsChart) {
+      recommendationsChart.destroy();
+      recommendationsChart = null;
+    }
+
+    const canvas = document.getElementById('recommendations-chart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Prepare datasets for each role
+    const datasets = [];
+    const colors = {
+      'BA': { capacity: 'rgba(54, 162, 235, 0.5)', demand: 'rgba(54, 162, 235, 1)' },
+      'Dev': { capacity: 'rgba(255, 99, 132, 0.5)', demand: 'rgba(255, 99, 132, 1)' },
+      'Planner': { capacity: 'rgba(75, 192, 192, 0.5)', demand: 'rgba(75, 192, 192, 1)' }
+    };
+
+    Object.keys(chartData).forEach(role => {
+      const roleData = chartData[role];
+      const months = roleData.map(d => d.month);
+      const capacities = roleData.map(d => d.capacity);
+      const demands = roleData.map(d => d.demand);
+
+      const color = colors[role] || { capacity: 'rgba(201, 203, 207, 0.5)', demand: 'rgba(201, 203, 207, 1)' };
+
+      datasets.push({
+        label: `${role} Capacity`,
+        data: capacities,
+        borderColor: color.capacity,
+        backgroundColor: color.capacity,
+        borderWidth: 2,
+        borderDash: [5, 5],
+        fill: false,
+      });
+
+      datasets.push({
+        label: `${role} Demand`,
+        data: demands,
+        borderColor: color.demand,
+        backgroundColor: color.demand,
+        borderWidth: 2,
+        fill: false,
+      });
+    });
+
+    // Get months from first role
+    const firstRole = Object.keys(chartData)[0];
+    const months = chartData[firstRole] ? chartData[firstRole].map(d => d.month) : [];
+
+    recommendationsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Capacity vs Demand by Role Over Time'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Person-Months'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Month'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Hook into subtab switching
+  document.querySelectorAll('[data-subtab="people-recommendations"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadResourcingRecommendations();
+    });
+  });
+
 })();
