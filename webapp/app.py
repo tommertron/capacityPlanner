@@ -448,6 +448,84 @@ def create_app() -> Flask:
         except (ValueError, OSError) as e:
             return jsonify({"error": str(e)}), 400
 
+    @app.post("/api/allocation/<portfolio_name>")
+    def save_allocation(portfolio_name: str):
+        """Save allocation changes to resource_capacity.csv"""
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            changes_data = request.get_json()
+            if not isinstance(changes_data, dict) or 'changes' not in changes_data:
+                return jsonify({"error": "Invalid request format"}), 400
+
+            changes = changes_data['changes']
+            if not isinstance(changes, list):
+                return jsonify({"error": "changes must be an array"}), 400
+
+            allocation_file = portfolio_path / "output" / "resource_capacity.csv"
+            if not allocation_file.exists():
+                return jsonify({"error": "resource_capacity.csv not found"}), 404
+
+            import csv
+
+            # Read existing data
+            allocation_data = []
+            with open(allocation_file, 'r', newline='') as f:
+                reader = csv.DictReader(f)
+                fieldnames = reader.fieldnames
+                for row in reader:
+                    allocation_data.append(row)
+
+            # Apply changes
+            for change in changes:
+                person = change['person']
+                project = change['project']
+                month = change['month']
+                new_value = float(change['newValue'])
+
+                # Find and update the matching row
+                for row in allocation_data:
+                    if (row['person'] == person and
+                        row['project_name'] == project and
+                        row['month'] == month):
+                        row['project_alloc_pct'] = f"{new_value:.4f}"
+                        break
+
+            # Recalculate total_pct for each person/month combination
+            person_month_totals = {}
+            for row in allocation_data:
+                person = row['person']
+                month = row['month']
+                project_alloc = float(row['project_alloc_pct'])
+
+                key = f"{person}|{month}"
+                if key not in person_month_totals:
+                    person_month_totals[key] = 0.0
+                person_month_totals[key] += project_alloc
+
+            # Update total_pct for all rows
+            for row in allocation_data:
+                person = row['person']
+                month = row['month']
+                key = f"{person}|{month}"
+                row['total_pct'] = f"{person_month_totals[key]:.4f}"
+
+            # Write back to CSV
+            with open(allocation_file, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(allocation_data)
+
+            return jsonify({
+                "success": True,
+                "changes_applied": len(changes)
+            })
+
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
     return app
 
 

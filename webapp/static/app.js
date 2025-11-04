@@ -1066,11 +1066,18 @@
   }
 
   // Render the allocation heatmap
+  // Store original allocation data for editing
+  let allocationData = [];
+  const allocationChanges = new Map(); // Track changes: "person|project|month" -> new value
+
   function renderAllocationHeatmap(data, container) {
     if (!data || data.length === 0) {
       container.innerHTML = '<div class="empty-state">No allocation data found</div>';
       return;
     }
+
+    // Store data for editing
+    allocationData = data;
 
     // First pass: identify each person's primary role(s)
     const personRoles = new Map();
@@ -1265,8 +1272,14 @@
             const proj = projMonths.find(p => p.month === month);
             const alloc = proj ? proj.allocation : 0;
             const colorClass = getAllocationClass(alloc);
+            const dataKey = `${person.name}|${projectName}|${month}`;
             html += '<td>';
-            html += `<div class="allocation-cell ${colorClass}">${formatPercent(alloc)}</div>`;
+            html += `<div class="allocation-cell editable-allocation ${colorClass}"
+                          contenteditable="true"
+                          data-person="${person.name}"
+                          data-project="${projectName}"
+                          data-month="${month}"
+                          data-original="${alloc}">${formatPercent(alloc)}</div>`;
             html += '</td>';
           });
 
@@ -1286,6 +1299,13 @@
     html += '<div class="legend-item"><div class="legend-color alloc-80"></div><span>75-85%</span></div>';
     html += '<div class="legend-item"><div class="legend-color alloc-100"></div><span>95-100%</span></div>';
     html += '<div class="legend-item"><div class="legend-color alloc-over"></div><span>&gt;100%</span></div>';
+    html += '</div>';
+
+    // Add edit controls
+    html += '<div class="edit-controls" style="margin-top: 16px; display: none;">';
+    html += '<button id="save-allocation-btn" class="btn btn-primary">Save Changes</button>';
+    html += '<button id="discard-allocation-btn" class="btn btn-secondary" style="margin-left: 8px;">Discard Changes</button>';
+    html += '<span id="allocation-changes-count" style="margin-left: 16px; color: var(--blue-600);"></span>';
     html += '</div>';
 
     container.innerHTML = html;
@@ -1338,6 +1358,318 @@
         }
       });
     });
+
+    // Add handlers for editable allocation cells
+    const editableCells = container.querySelectorAll('.editable-allocation');
+    editableCells.forEach(cell => {
+      // When user starts editing, convert percentage to decimal
+      cell.addEventListener('focus', function() {
+        const text = this.textContent.trim();
+        if (text === '-') {
+          this.textContent = '0';
+        } else {
+          // Remove % sign and convert to decimal (e.g., "25%" -> "0.25")
+          const pct = parseFloat(text);
+          if (!isNaN(pct)) {
+            this.textContent = (pct / 100).toFixed(2);
+          }
+        }
+        // Select all text for easy editing
+        const range = document.createRange();
+        range.selectNodeContents(this);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+
+      // When user finishes editing, validate and save
+      cell.addEventListener('blur', function() {
+        let value = parseFloat(this.textContent.trim());
+
+        // Validate input
+        if (isNaN(value) || value < 0) {
+          value = 0;
+        }
+        // Allow values over 1.0 (100%) for overallocation
+        if (value > 10) {
+          // If user entered a percentage (e.g., 25 instead of 0.25), convert it
+          value = value / 100;
+        }
+
+        // Store the change
+        const person = this.dataset.person;
+        const project = this.dataset.project;
+        const month = this.dataset.month;
+        const original = parseFloat(this.dataset.original);
+        const key = `${person}|${project}|${month}`;
+
+        if (Math.abs(value - original) < 0.0001) {
+          // No change, remove from changes map
+          allocationChanges.delete(key);
+          this.classList.remove('cell-modified');
+        } else {
+          // Track the change
+          allocationChanges.set(key, {
+            person,
+            project,
+            month,
+            oldValue: original,
+            newValue: value
+          });
+          this.classList.add('cell-modified');
+        }
+
+        // Update the display to percentage format
+        this.textContent = formatPercent(value);
+
+        // Update the cell color
+        this.className = `allocation-cell editable-allocation ${getAllocationClass(value)}`;
+        if (allocationChanges.has(key)) {
+          this.classList.add('cell-modified');
+        }
+
+        // Update button visibility and change count
+        updateEditControls();
+
+        // Dynamically update person total and role average
+        updateDynamicTotals(person, month);
+      });
+
+      // Prevent line breaks and limit input
+      cell.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.blur();
+        }
+      });
+
+      // Only allow numeric input and decimal point
+      cell.addEventListener('input', function(e) {
+        const text = this.textContent;
+        // Remove non-numeric characters except decimal point
+        const cleaned = text.replace(/[^0-9.]/g, '');
+        if (cleaned !== text) {
+          this.textContent = cleaned;
+          // Move cursor to end
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.selectNodeContents(this);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      });
+    });
+
+    // Add handlers for save/discard buttons
+    const saveBtn = document.getElementById('save-allocation-btn');
+    const discardBtn = document.getElementById('discard-allocation-btn');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        await saveAllocationChanges();
+      });
+    }
+
+    if (discardBtn) {
+      discardBtn.addEventListener('click', () => {
+        discardAllocationChanges();
+      });
+    }
+  }
+
+  // Update edit controls visibility and change count
+  function updateEditControls() {
+    const controls = document.querySelector('.edit-controls');
+    const countSpan = document.getElementById('allocation-changes-count');
+
+    if (controls) {
+      if (allocationChanges.size > 0) {
+        controls.style.display = 'block';
+        if (countSpan) {
+          countSpan.textContent = `${allocationChanges.size} change${allocationChanges.size > 1 ? 's' : ''} pending`;
+        }
+      } else {
+        controls.style.display = 'none';
+      }
+    }
+  }
+
+  // Dynamically update person totals and role averages when a cell is edited
+  function updateDynamicTotals(personName, month) {
+    const container = document.getElementById('resource-allocation-container');
+    if (!container) return;
+
+    // Find the person's row
+    const personRow = container.querySelector(`.person-row[data-person="${personName}"]`);
+    if (!personRow) return;
+
+    // Get the role name from the person row
+    const roleName = personRow.dataset.roleChild;
+
+    // Get all month headers to find the column index for this month
+    const monthHeaders = Array.from(container.querySelectorAll('thead th'));
+    let monthColumnIndex = -1;
+    for (let i = 0; i < monthHeaders.length; i++) {
+      if (monthHeaders[i].textContent.trim() === month) {
+        monthColumnIndex = i;
+        break;
+      }
+    }
+
+    if (monthColumnIndex === -1) return;
+
+    // Calculate new person total for this month
+    // Find all detail rows for this person
+    const detailRows = container.querySelectorAll(`.detail-row[data-person-child="${personName}"]`);
+    let personTotal = 0;
+
+    detailRows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length > monthColumnIndex) {
+        const cell = cells[monthColumnIndex];
+        const allocationCell = cell.querySelector('.allocation-cell');
+        if (allocationCell) {
+          const cellPerson = allocationCell.dataset.person;
+          const cellMonth = allocationCell.dataset.month;
+
+          // Use changed value if it exists, otherwise use original
+          const key = `${cellPerson}|${allocationCell.dataset.project}|${cellMonth}`;
+          let value;
+          if (allocationChanges.has(key)) {
+            value = allocationChanges.get(key).newValue;
+          } else {
+            value = parseFloat(allocationCell.dataset.original) || 0;
+          }
+          personTotal += value;
+        }
+      }
+    });
+
+    // Update the person row cell for this month
+    const personCells = personRow.querySelectorAll('td');
+    if (personCells.length > monthColumnIndex) {
+      const personCell = personCells[monthColumnIndex];
+      const personAllocationCell = personCell.querySelector('.allocation-cell');
+      if (personAllocationCell) {
+        personAllocationCell.textContent = formatPercent(personTotal);
+        personAllocationCell.className = `allocation-cell ${getAllocationClass(personTotal)}`;
+      }
+    }
+
+    // Calculate new role average for this month
+    // Find all person rows for this role
+    const rolePersonRows = container.querySelectorAll(`.person-row[data-role-child="${roleName}"]`);
+    let roleTotal = 0;
+    let rolePersonCount = 0;
+
+    rolePersonRows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length > monthColumnIndex) {
+        const cell = cells[monthColumnIndex];
+        const allocationCell = cell.querySelector('.allocation-cell');
+        if (allocationCell) {
+          // Calculate this person's total (sum of their project allocations)
+          const thisPersonName = row.dataset.person;
+          const thisPersonDetailRows = container.querySelectorAll(`.detail-row[data-person-child="${thisPersonName}"]`);
+          let thisPersonTotal = 0;
+
+          thisPersonDetailRows.forEach(detailRow => {
+            const detailCells = detailRow.querySelectorAll('td');
+            if (detailCells.length > monthColumnIndex) {
+              const detailCell = detailCells[monthColumnIndex];
+              const detailAllocationCell = detailCell.querySelector('.allocation-cell');
+              if (detailAllocationCell) {
+                const cellPerson = detailAllocationCell.dataset.person;
+                const cellMonth = detailAllocationCell.dataset.month;
+
+                // Use changed value if it exists, otherwise use original
+                const key = `${cellPerson}|${detailAllocationCell.dataset.project}|${cellMonth}`;
+                let value;
+                if (allocationChanges.has(key)) {
+                  value = allocationChanges.get(key).newValue;
+                } else {
+                  value = parseFloat(detailAllocationCell.dataset.original) || 0;
+                }
+                thisPersonTotal += value;
+              }
+            }
+          });
+
+          roleTotal += thisPersonTotal;
+          rolePersonCount++;
+        }
+      }
+    });
+
+    const roleAverage = rolePersonCount > 0 ? roleTotal / rolePersonCount : 0;
+
+    // Update the role row cell for this month
+    const roleRow = container.querySelector(`.role-row[data-role="${roleName}"]`);
+    if (roleRow) {
+      const roleCells = roleRow.querySelectorAll('td');
+      if (roleCells.length > monthColumnIndex) {
+        const roleCell = roleCells[monthColumnIndex];
+        const roleAllocationCell = roleCell.querySelector('.allocation-cell');
+        if (roleAllocationCell) {
+          roleAllocationCell.textContent = formatPercent(roleAverage);
+          roleAllocationCell.className = `allocation-cell ${getAllocationClass(roleAverage)}`;
+        }
+      }
+    }
+  }
+
+  // Discard allocation changes
+  function discardAllocationChanges() {
+    allocationChanges.clear();
+
+    // Reload the allocation table to reset all values
+    loadResourceAllocation();
+  }
+
+  // Save allocation changes to backend
+  async function saveAllocationChanges() {
+    if (allocationChanges.size === 0) {
+      return;
+    }
+
+    const saveBtn = document.getElementById('save-allocation-btn');
+    const discardBtn = document.getElementById('discard-allocation-btn');
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (discardBtn) discardBtn.disabled = true;
+
+    try {
+      // Convert changes map to array for sending to backend
+      const changes = Array.from(allocationChanges.values());
+
+      const response = await fetch(`/api/allocation/${selectedPortfolio}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ changes })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save allocation changes');
+      }
+
+      const result = await response.json();
+
+      // Clear changes and reload
+      allocationChanges.clear();
+      await loadResourceAllocation();
+
+      showNotification('Allocation changes saved successfully', 'success');
+    } catch (error) {
+      console.error('Error saving allocation changes:', error);
+      showNotification(`Error saving changes: ${error.message}`, 'error');
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+      if (discardBtn) discardBtn.disabled = false;
+    }
   }
 
   // People Management

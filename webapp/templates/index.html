@@ -462,6 +462,27 @@
             font-style: italic;
             color: var(--gray-600);
         }
+        .editable-allocation {
+            cursor: text;
+            transition: all 0.2s;
+        }
+        .editable-allocation:hover {
+            box-shadow: 0 0 0 2px var(--blue-200);
+        }
+        .editable-allocation:focus {
+            outline: 2px solid var(--blue-500);
+            outline-offset: -2px;
+        }
+        .cell-modified {
+            box-shadow: 0 0 0 2px var(--orange-400) !important;
+            font-weight: 600;
+        }
+        .cell-modified::after {
+            content: '*';
+            color: var(--orange-600);
+            font-weight: bold;
+            margin-left: 2px;
+        }
 
         .allocation-legend {
             display: flex;
