@@ -121,7 +121,9 @@ class RecommendationEngine:
 
                 for role in person_obj.roles:
                     # Recommend hiring someone with similar skillset
-                    first_month = min(mv[0] for mv in month_violations)
+                    # Filter out None months and find earliest
+                    months_with_values = [mv[0] for mv in month_violations if mv[0] is not None]
+                    first_month = min(months_with_values) if months_with_values else "ASAP"
 
                     self.hiring_recommendations.append(HiringRecommendation(
                         role=role,

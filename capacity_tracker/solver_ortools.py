@@ -144,11 +144,10 @@ class CapacityPlannerModel:
         """Build model allowing violations (with penalties)."""
         self._create_task_variables()
         self._add_assignment_constraints()
-        # Skip capacity and skill constraints in relaxed mode - just assign and track violations
-        # self._add_capacity_constraints(allow_violations=True)
-        # self._add_skill_constraints(allow_violations=True)
+        self._add_soft_capacity_constraints()  # Add soft capacity limits (penalized but not hard)
+        # Skip skill constraints in relaxed mode - just track violations post-hoc
         self._add_precedence_constraints()
-        self._set_objective()
+        self._set_objective_with_penalties()
 
     def _create_task_variables(self):
         """Create decision variables for task assignments."""
@@ -298,6 +297,45 @@ class CapacityPlannerModel:
         # Simplified version - just limit concurrent tasks per person
         # This is much more tractable than week-by-week capacity tracking
 
+    def _add_soft_capacity_constraints(self):
+        """
+        Add soft capacity constraints for relaxed mode.
+        Limits concurrent assignments per person-role to avoid extreme over-allocation.
+        """
+        for person in self.people:
+            person_name = person.name
+
+            for role in person.roles:
+                # Limit total concurrent projects per person-role
+                # Use a reasonable limit: 2x the strict concurrency limit
+                strict_limit = self.config.max_concurrent_for_role(role)
+                soft_limit = strict_limit * 2  # Allow some over-allocation but not extreme
+
+                # Collect all assignments for this person-role
+                assignments = []
+                for project in self.projects:
+                    key = (project.id, role, person_name)
+                    if key not in self.task_vars:
+                        continue
+                    assignments.append(self.task_vars[key]['assignment'])
+
+                if not assignments:
+                    continue
+
+                # Soft constraint: prefer to stay under soft_limit
+                # But allow violations with a slack variable
+                total_assignments = sum(assignments)
+
+                # Create slack variable for over-allocation
+                slack_var = self.model.NewIntVar(0, len(assignments),
+                                                   f'slack_{person_name}_{role}')
+
+                # total_assignments <= soft_limit + slack
+                self.model.Add(total_assignments <= soft_limit + slack_var)
+
+                # Store slack for penalty in objective
+                self.over_allocation_vars[(person_name, role)] = slack_var
+
     def _add_skill_constraints(self, allow_violations: bool):
         """Add constraints for skill matching."""
         for key, task in self.task_vars.items():
@@ -390,9 +428,10 @@ class CapacityPlannerModel:
                 weight = 1
             objective_terms.append(end_var * weight)
 
-        # Penalty for over-allocations (heavy penalty)
-        for over_alloc_var in self.over_allocation_vars.values():
-            objective_terms.append(over_alloc_var * 1000)  # Very high penalty
+        # Penalty for over-allocations (heavy penalty on slack variables)
+        # Each extra assignment beyond soft limit gets heavily penalized
+        for slack_var in self.over_allocation_vars.values():
+            objective_terms.append(slack_var * 10000)  # Very high penalty per extra assignment
 
         # Penalty for skill mismatches (moderate penalty)
         for mismatch_var in self.skill_mismatch_vars.values():
@@ -439,24 +478,36 @@ class CapacityPlannerModel:
         """Extract violations from the relaxed solution."""
         violations = []
 
-        # Extract over-allocation violations
-        for (person_name, month_idx), over_alloc_var in self.over_allocation_vars.items():
+        # Extract over-allocation violations from violation variables (if they exist)
+        for key, over_alloc_var in self.over_allocation_vars.items():
             over_alloc_value = solver.Value(over_alloc_var)
             if over_alloc_value > 0:
-                # Convert back to percentage
-                over_alloc_pct = over_alloc_value / 1000.0
-                severity = 1.0 + over_alloc_pct
+                # Check key format: (person_name, month_idx) or (person_name, role)
+                if len(key) == 2 and isinstance(key[1], str):
+                    # New format: (person_name, role) -> slack variable
+                    person_name, role = key
+                    violations.append(Violation(
+                        violation_type="over_allocation",
+                        person=person_name,
+                        role=role,
+                        severity=1.0 + over_alloc_value,  # Each slack unit = 1 extra assignment
+                        description=f"{person_name} ({role}) assigned to {over_alloc_value} extra projects beyond capacity"
+                    ))
+                else:
+                    # Old format: (person_name, month_idx) -> percentage over-allocation
+                    person_name, month_idx = key
+                    over_alloc_pct = over_alloc_value / 1000.0
+                    severity = 1.0 + over_alloc_pct
+                    month_str = self.month_starts[month_idx].strftime(MONTH_FMT)
+                    violations.append(Violation(
+                        violation_type="over_allocation",
+                        person=person_name,
+                        month=month_str,
+                        severity=severity,
+                        description=f"{person_name} over-allocated to {severity*100:.0f}% in {month_str}"
+                    ))
 
-                month_str = self.month_starts[month_idx].strftime(MONTH_FMT)
-                violations.append(Violation(
-                    violation_type="over_allocation",
-                    person=person_name,
-                    month=month_str,
-                    severity=severity,
-                    description=f"{person_name} over-allocated to {severity*100:.0f}% in {month_str}"
-                ))
-
-        # Extract skill mismatch violations
+        # Extract skill mismatch violations from violation variables (if they exist)
         for (project_id, role, person_name), mismatch_var in self.skill_mismatch_vars.items():
             if solver.Value(mismatch_var):
                 task = self.task_vars[(project_id, role, person_name)]
@@ -473,6 +524,95 @@ class CapacityPlannerModel:
                     actual_skills=actual_skills,
                     description=f"{person_name} assigned to {project_id} ({role}) "
                                 f"without required skills: {', '.join(required_skills)}"
+                ))
+
+        # Always analyze the solution to get detailed week-by-week violations
+        # This provides more granular information than the high-level slack variables
+        violations.extend(self._analyze_solution_for_violations(solver))
+
+        return violations
+
+    def _analyze_solution_for_violations(self, solver: cp_model.CpSolver) -> List[Violation]:
+        """
+        Analyze the actual solution to detect violations post-hoc.
+        This is used when relaxed mode skips constraints entirely.
+        """
+        violations = []
+
+        # 1. Analyze capacity violations (over-allocation)
+        # Build a map of person -> week -> total allocation
+        person_week_allocation = defaultdict(lambda: defaultdict(float))
+
+        for key, task in self.task_vars.items():
+            proj_id, role, person_name = key
+
+            if not solver.Value(task['assignment']):
+                continue
+
+            task_start = solver.Value(task['start'])
+            task_end = solver.Value(task['end'])
+            task_duration = solver.Value(task['duration'])
+            effort_pw = task['effort_pw']
+
+            # Calculate average effort per week
+            avg_effort_per_week = effort_pw / max(1, task_duration)
+
+            # Allocate across weeks
+            for week_idx in range(task_start, task_end):
+                person_week_allocation[person_name][week_idx] += avg_effort_per_week
+
+        # Check for over-allocation
+        for person_name, week_allocations in person_week_allocation.items():
+            person = self.person_by_name[person_name]
+
+            for week_idx, total_allocation in week_allocations.items():
+                # Convert week index to approximate month for reporting
+                approx_month_idx = min(int(week_idx / self.weeks_per_month), len(self.month_starts) - 1)
+                month_str = self.month_starts[approx_month_idx].strftime(MONTH_FMT)
+
+                # Get KTLO for this person's role (assume first role for simplicity)
+                role = person.roles[0] if person.roles else "Dev"
+                ktlo_pct = self.config.ktlo_pct_by_role.get(role, 0.0)
+                max_capacity = 1.0 - ktlo_pct
+
+                # Check if over-allocated
+                if total_allocation > max_capacity:
+                    severity = total_allocation / max_capacity
+                    violations.append(Violation(
+                        violation_type="over_allocation",
+                        person=person_name,
+                        month=month_str,
+                        role=role,
+                        severity=severity,
+                        description=f"{person_name} over-allocated to {total_allocation*100:.0f}% "
+                                    f"(max {max_capacity*100:.0f}%) in week {week_idx} (~{month_str})"
+                    ))
+
+        # 2. Analyze skill mismatches
+        for key, task in self.task_vars.items():
+            proj_id, role, person_name = key
+
+            if not solver.Value(task['assignment']):
+                continue
+
+            required_skills = task['required_skills']
+            if not required_skills:
+                continue
+
+            person_skills = self.person_skills.get(person_name, set())
+            missing_skills = required_skills - person_skills
+
+            if missing_skills:
+                violations.append(Violation(
+                    violation_type="skill_mismatch",
+                    person=person_name,
+                    project_id=proj_id,
+                    role=role,
+                    severity=len(missing_skills) / max(1, len(required_skills)),
+                    required_skills=list(required_skills),
+                    actual_skills=list(person_skills),
+                    description=f"{person_name} assigned to {proj_id} ({role}) "
+                                f"but missing skills: {', '.join(sorted(missing_skills))}"
                 ))
 
         return violations
