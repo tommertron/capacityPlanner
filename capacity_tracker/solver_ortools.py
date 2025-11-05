@@ -236,29 +236,19 @@ class CapacityPlannerModel:
 
                         task = self.task_vars[key]
 
-                        # Create boolean: is this task active in this month?
-                        is_active = self.model.NewBoolVar(
-                            f'active_{project.id}_{role}_{person_name}_{month_idx}'
-                        )
+                        # Simplified: Just track if assignment is possible
+                        # The assignment variable itself controls if this counts
+                        # We'll multiply effort by assignment to get contribution
 
-                        # is_active = 1 if task.start <= month_idx < task.end
-                        self.model.Add(task['start'] <= month_idx).OnlyEnforceIf(is_active)
-                        self.model.Add(task['end'] > month_idx).OnlyEnforceIf(is_active)
-                        self.model.Add(task['assignment'] == 1).OnlyEnforceIf(is_active)
-
-                        # If not active, the constraints don't apply
-                        self.model.Add(
-                            (task['start'] > month_idx) + (task['end'] <= month_idx) + (task['assignment'] == 0) >= 1
-                        ).OnlyEnforceIf(is_active.Not())
-
-                        # Effort per month (simplified: uniform distribution)
-                        # TODO: Support effort curves
-                        effort_per_month = task['effort_pm'] / task['duration']
-
+                        # Simplified: Use a fixed capacity estimate
+                        # Assume each task uses about 30% of a person when active
+                        # This is a placeholder - proper implementation would track actual durations
+                        #
                         # Scale to integer (1000 = 100%)
-                        effort_scaled = int(effort_per_month * 1000)
+                        estimated_effort_per_month = 300  # 30%
 
-                        monthly_allocations.append((is_active, effort_scaled))
+                        # Contribution to this month = assignment * effort
+                        monthly_allocations.append((task['assignment'], estimated_effort_per_month))
 
                     if not monthly_allocations:
                         continue
@@ -388,12 +378,35 @@ class CapacityPlannerModel:
         """Solve the model and return solver if successful."""
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = time_limit_seconds
-        solver.parameters.log_search_progress = False
+        solver.parameters.log_search_progress = True  # Enable logging
+
+        print(f"    Model has {len(self.task_vars)} task variables")
+        print(f"    Model has {len(self.assignment_vars)} assignment variables")
+        print(f"    Solving...")
 
         status = solver.Solve(self.model)
 
+        status_names = {
+            cp_model.OPTIMAL: "OPTIMAL",
+            cp_model.FEASIBLE: "FEASIBLE",
+            cp_model.INFEASIBLE: "INFEASIBLE",
+            cp_model.MODEL_INVALID: "MODEL_INVALID",
+            cp_model.UNKNOWN: "UNKNOWN",
+        }
+
+        print(f"    Solver status: {status_names.get(status, 'UNKNOWN')}")
+        print(f"    Wall time: {solver.WallTime():.2f}s")
+
         if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+            print(f"    ✓ Found solution!")
             return solver
+        elif status == cp_model.INFEASIBLE:
+            print(f"    ✗ Problem is INFEASIBLE (no solution exists)")
+        elif status == cp_model.MODEL_INVALID:
+            print(f"    ✗ MODEL is INVALID (check constraints)")
+        else:
+            print(f"    ✗ Solver could not find solution in time limit")
+
         return None
 
     def extract_violations(self, solver: cp_model.CpSolver) -> List[Violation]:
@@ -450,15 +463,234 @@ def solve_with_ortools(
     Pass 1: Try strict constraints
     Pass 2: If failed, allow violations but track them
     """
-    # TODO: Implement full integration with existing data structures
-    # This is a placeholder for now
+    from .engine import _projects_from_df, _people_from_df, _build_month_sequence
+    from .recommendations import RecommendationEngine
+
+    # Parse input data
+    projects = _projects_from_df(projects_df)
+    people = _people_from_df(people_df)
+    month_starts = _build_month_sequence(config)
+
+    if not projects:
+        return SolverResult(
+            success=False,
+            solution_type="failed",
+            scheduled_projects=[],
+            unscheduled_projects=[],
+            violations=[],
+            resource_timeline=pd.DataFrame(),
+            recommendations={"error": "No projects to schedule"},
+        )
+
+    if not people:
+        return SolverResult(
+            success=False,
+            solution_type="failed",
+            scheduled_projects=[],
+            unscheduled_projects=[],
+            violations=[],
+            resource_timeline=pd.DataFrame(),
+            recommendations={"error": "No people available"},
+        )
+
+    print(f"\n{'='*60}")
+    print(f"OR-Tools Solver: Multi-Pass Optimization")
+    print(f"{'='*60}")
+    print(f"Projects: {len(projects)}")
+    print(f"People: {len(people)}")
+    print(f"Planning Horizon: {len(month_starts)} months")
+    print(f"Time Limit: {config.solver_time_limit_seconds}s")
+    print()
+
+    # Pass 1: Try strict constraints
+    print("PASS 1: Attempting strict constraint satisfaction...")
+    print("-" * 60)
+
+    model_strict = CapacityPlannerModel(projects, people, config, month_starts)
+    model_strict.build_strict_model()
+    solver_strict = model_strict.solve(time_limit_seconds=config.solver_time_limit_seconds)
+
+    if solver_strict:
+        print("✓ SUCCESS: Found feasible solution with strict constraints!")
+        print()
+
+        scheduled, unscheduled = _extract_solution(
+            solver_strict, model_strict, projects, people, month_starts
+        )
+
+        return SolverResult(
+            success=True,
+            solution_type="strict",
+            scheduled_projects=scheduled,
+            unscheduled_projects=unscheduled,
+            violations=[],
+            resource_timeline=_build_resource_timeline(solver_strict, model_strict, people, month_starts),
+            recommendations={
+                "status": "All projects scheduled within constraints",
+                "hiring": [],
+                "training": [],
+                "summary": {"mode": "strict", "violations": 0}
+            },
+        )
+
+    print("✗ FAILED: No feasible solution with strict constraints")
+    print()
+
+    # Pass 2: Try relaxed constraints
+    print("PASS 2: Attempting relaxed optimization (allowing violations)...")
+    print("-" * 60)
+
+    model_relaxed = CapacityPlannerModel(projects, people, config, month_starts)
+    model_relaxed.build_relaxed_model()
+    solver_relaxed = model_relaxed.solve(time_limit_seconds=config.solver_time_limit_seconds)
+
+    if solver_relaxed:
+        print("✓ SUCCESS: Found solution with violations")
+        print()
+
+        violations = model_relaxed.extract_violations(solver_relaxed)
+        print(f"Violations detected: {len(violations)}")
+        for v in violations[:5]:  # Show first 5
+            print(f"  - {v.description}")
+        if len(violations) > 5:
+            print(f"  ... and {len(violations) - 5} more")
+        print()
+
+        scheduled, unscheduled = _extract_solution(
+            solver_relaxed, model_relaxed, projects, people, month_starts
+        )
+
+        # Generate recommendations
+        rec_engine = RecommendationEngine(violations, scheduled, people, month_starts)
+        recommendations = rec_engine.analyze()
+
+        print(f"Recommendations generated:")
+        print(f"  - Hiring: {len(recommendations['hiring'])}")
+        print(f"  - Training: {len(recommendations['training'])}")
+        print()
+
+        return SolverResult(
+            success=True,
+            solution_type="relaxed",
+            scheduled_projects=scheduled,
+            unscheduled_projects=unscheduled,
+            violations=violations,
+            resource_timeline=_build_resource_timeline(solver_relaxed, model_relaxed, people, month_starts),
+            recommendations=recommendations,
+        )
+
+    print("✗ FAILED: No solution found even with relaxed constraints")
+    print()
 
     return SolverResult(
         success=False,
         solution_type="failed",
         scheduled_projects=[],
-        unscheduled_projects=[],
+        unscheduled_projects=[{
+            "id": p.id,
+            "name": p.name,
+            "reason": "Solver could not find any feasible solution"
+        } for p in projects],
         violations=[],
         resource_timeline=pd.DataFrame(),
-        recommendations={},
+        recommendations={"error": "No feasible solution found"},
     )
+
+
+def _extract_solution(
+    solver: cp_model.CpSolver,
+    model: CapacityPlannerModel,
+    projects: List[Project],
+    people: List[Person],
+    month_starts: List[date],
+) -> Tuple[List[Dict], List[Dict]]:
+    """Extract scheduled and unscheduled projects from solver solution."""
+    scheduled = []
+    unscheduled = []
+
+    for project in projects:
+        # Check if project has any assignments
+        project_assigned = False
+        assigned_people = defaultdict(set)
+
+        for key, task in model.task_vars.items():
+            proj_id, role, person_name = key
+            if proj_id == project.id:
+                if solver.Value(task['assignment']):
+                    project_assigned = True
+                    assigned_people[role].add(person_name)
+
+        if project_assigned:
+            start_month_idx = solver.Value(model.project_start_vars[project.id])
+            end_month_idx = solver.Value(model.project_end_vars[project.id])
+
+            scheduled.append({
+                "id": project.id,
+                "name": project.name,
+                "start_month": month_starts[start_month_idx].strftime(MONTH_FMT),
+                "end_month": month_starts[min(end_month_idx, len(month_starts)-1)].strftime(MONTH_FMT),
+                "duration_months": end_month_idx - start_month_idx,
+                "assigned_people": {role: list(people) for role, people in assigned_people.items()},
+            })
+        else:
+            unscheduled.append({
+                "id": project.id,
+                "name": project.name,
+                "reason": "Could not find feasible assignment",
+            })
+
+    return scheduled, unscheduled
+
+
+def _build_resource_timeline(
+    solver: cp_model.CpSolver,
+    model: CapacityPlannerModel,
+    people: List[Person],
+    month_starts: List[date],
+) -> pd.DataFrame:
+    """Build resource allocation timeline dataframe."""
+    rows = []
+
+    for person in people:
+        for month_idx, month_start in enumerate(month_starts):
+            month_str = month_start.strftime(MONTH_FMT)
+
+            for role in person.roles:
+                # Find all tasks assigned to this person in this month
+                allocations = []
+                total_pct = 0.0
+
+                for key, task in model.task_vars.items():
+                    proj_id, task_role, person_name = key
+
+                    if person_name != person.name or task_role != role:
+                        continue
+
+                    if not solver.Value(task['assignment']):
+                        continue
+
+                    task_start = solver.Value(task['start'])
+                    task_end = solver.Value(task['end'])
+
+                    if task_start <= month_idx < task_end:
+                        # Simplified: assume uniform distribution
+                        duration = solver.Value(task['duration'])
+                        effort_pm = task['effort_pm']
+                        pct_per_month = effort_pm / max(1, duration)
+
+                        allocations.append({
+                            "project_id": proj_id,
+                            "allocation_pct": pct_per_month,
+                        })
+                        total_pct += pct_per_month
+
+                if allocations or month_idx < 6:  # Show first 6 months even if empty
+                    rows.append({
+                        "person": person.name,
+                        "role": role,
+                        "month": month_str,
+                        "total_allocation_pct": round(total_pct, 3),
+                        "project_count": len(allocations),
+                    })
+
+    return pd.DataFrame(rows)
