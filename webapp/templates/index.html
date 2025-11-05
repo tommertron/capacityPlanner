@@ -1168,39 +1168,44 @@
     </header>
 
     <div class="card" style="margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <label for="portfolio-selector" style="margin: 0; white-space: nowrap;">Current Portfolio:</label>
-            <select id="portfolio-selector" style="flex: 1; max-width: 400px; min-width: 200px;">
-                <option value="">Select a portfolio...</option>
-                {% for entry in project_dirs %}
-                    <option value="{{ entry.name }}">{{ entry.name }}</option>
-                {% endfor %}
-            </select>
-            <button id="create-portfolio-btn" class="btn-primary" style="white-space: nowrap;">+ New Portfolio</button>
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: 1;">
+                <label for="portfolio-selector" style="margin: 0; white-space: nowrap;">Current Portfolio:</label>
+                <select id="portfolio-selector" style="flex: 1; max-width: 400px; min-width: 200px;">
+                    <option value="">Select a portfolio...</option>
+                    {% for entry in project_dirs %}
+                        <option value="{{ entry.name }}">{{ entry.name }}</option>
+                    {% endfor %}
+                </select>
+                <button id="create-portfolio-btn" class="btn-primary" style="white-space: nowrap;">+ New Portfolio</button>
+            </div>
+            <button id="global-run-model-btn" class="btn-primary" style="white-space: nowrap; font-size: 1.1rem; padding: 0.75rem 1.5rem; font-weight: 700; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+                ▶ Run Model
+            </button>
         </div>
     </div>
 
     <div class="tabs">
-        <button class="tab active" data-tab="projects">Projects</button>
-        <button class="tab" data-tab="settings">Portfolio Settings</button>
-        <button class="tab" data-tab="people">People</button>
-        <button class="tab" data-tab="modelling">Modeller</button>
+        <button class="tab active" data-tab="setup">Setup</button>
+        <button class="tab" data-tab="results">Results</button>
         <button class="tab" data-tab="files">Files</button>
         <button class="tab" data-tab="help">Help</button>
     </div>
 
-    <!-- Projects Tab -->
-    <div id="projects" class="tab-content active">
+    <!-- Setup Tab -->
+    <div id="setup" class="tab-content active">
         <div class="card">
-            <h2>Projects</h2>
+            <h2>Portfolio Setup</h2>
             <div class="subtabs">
-                <button class="subtab active" data-subtab="projects-input">Projects</button>
-                <button class="subtab" data-subtab="projects-programs">Programs</button>
-                <button class="subtab" data-subtab="projects-timeline">Timeline</button>
-                <button class="subtab" data-subtab="projects-unallocated">Unallocated</button>
+                <button class="subtab active" data-subtab="setup-projects">Projects</button>
+                <button class="subtab" data-subtab="setup-programs">Programs</button>
+                <button class="subtab" data-subtab="setup-people">People</button>
+                <button class="subtab" data-subtab="setup-skills">Skills</button>
+                <button class="subtab" data-subtab="setup-settings">Settings</button>
             </div>
 
-            <div id="projects-input" class="subtab-content active">
+            <!-- Projects Input Subtab -->
+            <div id="setup-projects" class="subtab-content active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <button id="add-project-btn" class="btn-primary" style="display: none;">+ Add Project</button>
@@ -1223,7 +1228,8 @@
                 </div>
             </div>
 
-            <div id="projects-programs" class="subtab-content">
+            <!-- Programs Subtab -->
+            <div id="setup-programs" class="subtab-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <button id="add-program-btn" class="btn-primary" style="display: none;">+ Add Program</button>
@@ -1239,29 +1245,6 @@
                     <div class="empty-state">Select a portfolio to view programs</div>
                 </div>
             </div>
-
-            <div id="projects-timeline" class="subtab-content">
-                <div class="filter-bar" id="timeline-program-filter-bar">
-                    <label for="timeline-program-filter" style="margin: 0;">Program Filter:</label>
-                    <select id="timeline-program-filter">
-                        <option value="__all__">All Programs</option>
-                    </select>
-                    <label for="timeline-sort" style="margin: 0; margin-left: 1.5rem;">Sort By:</label>
-                    <button id="sort-by-program-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Program</button>
-                    <button id="sort-by-start-date-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Start Date</button>
-                </div>
-                <div id="projects-timeline-container">
-                    <div class="empty-state">Select a portfolio to view project timeline</div>
-                </div>
-            </div>
-
-            <div id="projects-unallocated" class="subtab-content">
-                <div id="projects-unallocated-container">
-                    <div class="empty-state">Select a portfolio to view unallocated work</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Portfolio Settings Tab -->
     <div id="settings" class="tab-content">
