@@ -742,7 +742,6 @@ def plan(
     # Check if OR-Tools solver is selected
     if hasattr(cfg, 'solver') and cfg.solver == 'ortools':
         from .solver_ortools import solve_with_ortools
-        from .io_utils import MONTH_FMT
 
         # Call OR-Tools solver
         result = solve_with_ortools(projects_df, people_df, cfg)

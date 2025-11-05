@@ -38,5 +38,6 @@
   "planner_project_month_cap_pct": 0.2,
   "planning_end": "2027-02-26",
   "planning_start": "2025-11-01",
-  "random_seed": 42
+  "random_seed": 42,
+  "solver": "ortools"
 }
