@@ -739,6 +739,57 @@ def plan(
     *,
     strict: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[Dict[str, object]]]:
+    # Check if OR-Tools solver is selected
+    if hasattr(cfg, 'solver') and cfg.solver == 'ortools':
+        from .solver_ortools import solve_with_ortools
+        from .io_utils import MONTH_FMT
+
+        # Call OR-Tools solver
+        result = solve_with_ortools(projects_df, people_df, cfg)
+
+        # Convert OR-Tools result to expected format
+        # Build project_timeline dataframe
+        timeline_records = []
+        for proj in result.scheduled_projects:
+            timeline_records.append({
+                'id': proj['id'],
+                'name': proj['name'],
+                'start_month': proj['start_month'],
+                'end_month': proj['end_month'],
+                'duration_months': proj['duration_months'],
+            })
+        project_timeline_df = pd.DataFrame(timeline_records)
+
+        # Use the resource_timeline from OR-Tools result as resource_capacity
+        resource_capacity_df = result.resource_timeline
+
+        # Add skipped projects to attrs
+        resource_capacity_df.attrs["skipped_projects"] = result.unscheduled_projects
+
+        # Convert recommendations to hiring_analysis format
+        hiring_analysis = None
+        if result.recommendations:
+            hiring_analysis = {
+                "summary": result.recommendations.get("summary", {}),
+                "recommendations": [],
+                "capacity_vs_demand": {},
+                "skill_bottlenecks": [],
+            }
+
+            # Add hiring recommendations if OR-Tools generated them
+            if "hiring" in result.recommendations:
+                for hire in result.recommendations["hiring"]:
+                    hiring_analysis["recommendations"].append({
+                        "role": hire.get("role", "Unknown"),
+                        "hires_needed": hire.get("count", 1),
+                        "peak_month": hire.get("by_month", "ASAP"),
+                        "needed_skills": list(hire.get("required_skills", [])),
+                        "reason": hire.get("reason", ""),
+                    })
+
+        return project_timeline_df, resource_capacity_df, hiring_analysis
+
+    # Otherwise use greedy solver (existing logic)
     roles = tuple(cfg.iter_roles())
     projects = _projects_from_df(projects_df)
     people = _people_from_df(people_df)
