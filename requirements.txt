@@ -1,0 +1,3 @@
+# Core dependencies for Portfolio Planner CLI
+pandas>=2.0
+python-dateutil>=2.8

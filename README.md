@@ -125,8 +125,14 @@ On Windows:
 
 4. **Install dependencies**
 
+For the web interface:
 ```bash
 pip install -r requirements-web.txt
+```
+
+For CLI-only usage:
+```bash
+pip install -r requirements.txt
 ```
 
 ## Running the Application
@@ -181,6 +187,32 @@ Navigate to: `http://127.0.0.1:5151` (or the port you specified)
 - Configure projects, people, and settings
 - Run the model to generate schedules
 - View results in the Timeline and Resource Allocation tabs
+
+### CLI Usage (Batch Processing)
+
+You can also run the planner from the command line without the web interface:
+
+1. **Install core dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+2. **Run the planner**
+
+```bash
+python -m capacity_tracker.main \
+  --projects portfolios/sample/input/projects.csv \
+  --people portfolios/sample/input/people.json \
+  --config portfolios/sample/input/config.json \
+  --outdir portfolios/sample/output/
+```
+
+This will generate the same output files as the web interface:
+- `project_timeline.csv` - Project schedules
+- `resource_capacity.csv` - Resource allocations
+- `unallocated_projects.md` - Projects that couldn't be scheduled
+- `resourcing_recommendations.md` - Capacity analysis
 
 ## Project Structure
 
