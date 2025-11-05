@@ -1,3 +1,6 @@
 # Core dependencies for Portfolio Planner CLI
 pandas>=2.0
 python-dateutil>=2.8
+
+# Optimization solvers
+ortools>=9.0  # Google OR-Tools for constraint programming

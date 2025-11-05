@@ -3502,6 +3502,7 @@
     }
 
     const allocationMode = config.allocation_mode || 'strict';
+    const solver = config.solver || 'greedy';
     const planningStart = config.planning_start || 'Not set';
     const planningEnd = config.planning_end === null || config.planning_end === undefined ? 'Open-ended' : (config.planning_end || 'Not set');
     const ktloMap = config.ktlo_pct_by_role || {};
@@ -3509,6 +3510,19 @@
 
     let html = '<div class="config-section" style="margin-bottom: 1.5rem;">';
     html += '<h3 style="margin-top: 0;">Model Configuration</h3>';
+
+    // Solver Selector
+    html += '<div class="form-group" style="margin-bottom: 1.5rem;">';
+    html += '<label for="modeller-solver-select" style="font-size: 1rem; margin-bottom: 0.75rem;">Solver Algorithm</label>';
+    html += `<select id="modeller-solver-select" style="font-size: 1rem; padding: 0.75rem;">`;
+    html += `<option value="greedy" ${solver === 'greedy' ? 'selected' : ''}>Greedy (fast, heuristic-based)</option>`;
+    html += `<option value="ortools" ${solver === 'ortools' ? 'selected' : ''}>OR-Tools (optimization-based, with violations)</option>`;
+    html += '</select>';
+    html += '<div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">';
+    html += '<strong>Greedy:</strong> Fast heuristic algorithm that schedules projects sequentially.<br>';
+    html += '<strong>OR-Tools:</strong> Constraint programming solver that finds optimal schedules and tracks violations (over-allocation, skill mismatches). Generates hiring and training recommendations.';
+    html += '</div>';
+    html += '</div>';
 
     // Allocation Mode Selector
     html += '<div class="form-group" style="margin-bottom: 1.5rem;">';
@@ -3581,6 +3595,49 @@
     html += '</div>'; // end config-section
 
     container.innerHTML = html;
+
+    // Add event listener for solver changes
+    const solverSelect = document.getElementById('modeller-solver-select');
+    if (solverSelect) {
+      solverSelect.addEventListener('change', async (e) => {
+        const newSolver = e.target.value;
+        try {
+          // Update the config
+          const updateResponse = await fetch(`/api/config/${selectedPortfolio}`);
+          if (!updateResponse.ok) {
+            alert('Failed to load current config');
+            return;
+          }
+          const currentConfig = await updateResponse.json();
+          currentConfig.solver = newSolver;
+
+          const saveResponse = await fetch(`/api/config/${selectedPortfolio}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentConfig)
+          });
+
+          if (!saveResponse.ok) {
+            alert('Failed to save solver choice');
+            return;
+          }
+
+          // Update cache
+          modellerConfigCache = { portfolio: selectedPortfolio, data: currentConfig };
+
+          // Update configData if it's loaded
+          if (configData && configLoadedPortfolio === selectedPortfolio) {
+            configData.solver = newSolver;
+            originalConfigData.solver = newSolver;
+          }
+
+          console.log(`Solver changed to: ${newSolver}`);
+        } catch (err) {
+          console.error('Error saving solver choice:', err);
+          alert('Failed to save solver choice. Please try again.');
+        }
+      });
+    }
 
     // Add event listener for allocation mode changes
     const modeSelect = document.getElementById('modeller-allocation-mode-select');

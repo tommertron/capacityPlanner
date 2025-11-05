@@ -3,6 +3,9 @@
 pandas>=2.0
 python-dateutil>=2.8
 
+# Optimization solvers
+ortools>=9.0  # Google OR-Tools for constraint programming
+
 # Web server
 Flask>=3.0
 waitress>=2.1
