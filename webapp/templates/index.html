@@ -1186,26 +1186,27 @@
     </div>
 
     <div class="tabs">
-        <button class="tab active" data-tab="setup">Setup</button>
+        <button class="tab active" data-tab="projects">Projects & Programs</button>
+        <button class="tab" data-tab="people">People & Skills</button>
+        <button class="tab" data-tab="settings">Settings & Run</button>
         <button class="tab" data-tab="results">Results</button>
         <button class="tab" data-tab="files">Files</button>
         <button class="tab" data-tab="help">Help</button>
     </div>
 
-    <!-- Setup Tab -->
-    <div id="setup" class="tab-content active">
+    <!-- Projects & Programs Tab (INPUT ONLY) -->
+    <div id="projects" class="tab-content active">
         <div class="card">
-            <h2>Portfolio Setup</h2>
+            <h2>Projects & Programs</h2>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                📝 <strong>Input:</strong> Define your projects and organize them into programs. After configuring, click "<strong>▶ Run Model</strong>" to generate results.
+            </p>
             <div class="subtabs">
-                <button class="subtab active" data-subtab="setup-projects">Projects</button>
-                <button class="subtab" data-subtab="setup-programs">Programs</button>
-                <button class="subtab" data-subtab="setup-people">People</button>
-                <button class="subtab" data-subtab="setup-skills">Skills</button>
-                <button class="subtab" data-subtab="setup-settings">Settings</button>
+                <button class="subtab active" data-subtab="projects-input">Projects</button>
+                <button class="subtab" data-subtab="projects-programs">Programs</button>
             </div>
 
-            <!-- Projects Input Subtab -->
-            <div id="setup-projects" class="subtab-content active">
+            <div id="projects-input" class="subtab-content active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <button id="add-project-btn" class="btn-primary" style="display: none;">+ Add Project</button>
@@ -1228,8 +1229,7 @@
                 </div>
             </div>
 
-            <!-- Programs Subtab -->
-            <div id="setup-programs" class="subtab-content">
+            <div id="projects-programs" class="subtab-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <button id="add-program-btn" class="btn-primary" style="display: none;">+ Add Program</button>
@@ -1245,12 +1245,25 @@
                     <div class="empty-state">Select a portfolio to view programs</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-    <!-- Portfolio Settings Tab -->
+    <!-- Settings & Run Tab (MERGED Settings + Modeller) -->
     <div id="settings" class="tab-content">
         <div class="card">
-            <h2>Portfolio Settings</h2>
+            <h2>Settings & Run Model</h2>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                ⚙️ <strong>Configuration:</strong> Set constraints and algorithm settings, then click "<strong>▶ Run Model</strong>" to generate your capacity plan.
+            </p>
+
+            <!-- Modeller Settings (Solver & Allocation Mode) -->
+            <div id="modeller-settings-container" style="margin-bottom: 1.5rem;">
+                <div class="info-text">Please select a portfolio to configure the model.</div>
+            </div>
+
+            <!-- Portfolio Settings -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="margin: 0;">Portfolio Constraints</h3>
                 <div class="config-actions">
                     <button id="save-config-btn" class="btn-primary" style="display: none;">Save Changes</button>
                     <button id="discard-config-btn" class="btn-discard" style="display: none;">Discard Changes</button>
@@ -1263,80 +1276,25 @@
             <div id="config-container">
                 <div class="empty-state">Select a portfolio to edit settings</div>
             </div>
-        </div>
-    </div>
 
-    <!-- People Tab -->
-    <div id="people" class="tab-content">
-        <div class="card">
-            <h2>People</h2>
-            <div class="subtabs">
-                <button class="subtab active" data-subtab="people-staff">Staff</button>
-                <button class="subtab" data-subtab="people-skills">Skills</button>
-                <button class="subtab" data-subtab="people-allocation">Resource Allocation</button>
-                <button class="subtab" data-subtab="people-recommendations">Resourcing Recommendations</button>
-            </div>
-
-            <div id="people-staff" class="subtab-content active">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="margin: 0;">Staff Management</h3>
-                    <button id="add-person-btn" class="btn-primary">+ Add Person</button>
+            <!-- Run Model Section -->
+            <div style="margin-top: 2rem; padding: 1.5rem; background: var(--gray-50); border-radius: var(--border-radius); border: 2px solid var(--primary-color);">
+                <h3 style="margin: 0 0 1rem 0;">Ready to Run?</h3>
+                <div class="info-text" style="margin-bottom: 1rem;">
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li>✓ Projects configured</li>
+                        <li>✓ People and skills defined</li>
+                        <li>✓ Settings reviewed</li>
+                    </ul>
                 </div>
-                <div id="people-container">
-                    <div class="empty-state">Select a portfolio to manage people</div>
-                </div>
-            </div>
-
-            <div id="people-skills" class="subtab-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="margin: 0;">Skills Management</h3>
-                    <button id="add-skill-btn" class="btn-primary">+ Add Skill</button>
-                </div>
-                <div id="skills-container">
-                    <div class="empty-state">Select a portfolio to manage skills</div>
-                </div>
-            </div>
-
-            <div id="people-allocation" class="subtab-content">
-                <div id="resource-allocation-container">
-                    <div class="empty-state">Select a portfolio to view resource allocation</div>
-                </div>
-            </div>
-
-            <div id="people-recommendations" class="subtab-content">
-                <div id="resourcing-recommendations-container">
-                    <div class="empty-state">Select a portfolio and run the model in aggressive mode to view hiring recommendations</div>
-                </div>
+                <form id="run-form">
+                    <button type="submit" style="width: 100%; font-size: 1.1rem; padding: 1rem;">▶ Run Model</button>
+                </form>
+                <div id="status-message" aria-live="polite"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Modelling Tab -->
-    <div id="modelling" class="tab-content">
-        <div class="card">
-            <h2>Run Portfolio Model</h2>
-
-            <!-- Modeller Settings Container -->
-            <div id="modeller-settings-container" style="margin-bottom: 1.5rem;">
-                <div class="info-text">Please select a portfolio to configure the model.</div>
-            </div>
-
-            <div class="info-text" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: var(--border-radius);">
-                <p style="margin: 0 0 0.5rem 0;"><strong>Instructions:</strong></p>
-                <ul style="margin: 0; padding-left: 1.5rem;">
-                    <li>Select a portfolio from the dropdown above</li>
-                    <li>Configure the allocation mode and review the constraints above</li>
-                    <li>Ensure your projects and people data are configured</li>
-                    <li>Click "Run Model" to start the capacity planning algorithm</li>
-                    <li>View results in People → Resource Allocation after completion</li>
-                </ul>
-            </div>
-            <form id="run-form">
-                <button type="submit">Run Model</button>
-            </form>
-            <div id="status-message" aria-live="polite"></div>
-        </div>
-
+        <!-- Recent Jobs -->
         <div class="card">
             <h2>Recent Jobs</h2>
             <div class="table-container">
@@ -1366,6 +1324,93 @@
                     {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- People & Skills Tab (INPUT ONLY) -->
+    <div id="people" class="tab-content">
+        <div class="card">
+            <h2>People & Skills</h2>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                👥 <strong>Input:</strong> Manage your team and define available skills. Configure people's roles, availability, and skillsets before running the model.
+            </p>
+            <div class="subtabs">
+                <button class="subtab active" data-subtab="people-staff">Staff</button>
+                <button class="subtab" data-subtab="people-skills">Skills</button>
+            </div>
+
+            <div id="people-staff" class="subtab-content active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Staff Management</h3>
+                    <button id="add-person-btn" class="btn-primary">+ Add Person</button>
+                </div>
+                <div id="people-container">
+                    <div class="empty-state">Select a portfolio to manage people</div>
+                </div>
+            </div>
+
+            <div id="people-skills" class="subtab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Skills Management</h3>
+                    <button id="add-skill-btn" class="btn-primary">+ Add Skill</button>
+                </div>
+                <div id="skills-container">
+                    <div class="empty-state">Select a portfolio to manage skills</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Tab (OUTPUT ONLY) -->
+    <div id="results" class="tab-content">
+        <div class="card">
+            <h2>Model Results</h2>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                📊 <strong>Output:</strong> Review scheduling results, resource allocation, and recommendations after running the model.
+            </p>
+            <div class="subtabs">
+                <button class="subtab active" data-subtab="projects-timeline">Timeline</button>
+                <button class="subtab" data-subtab="people-allocation">Resource Allocation</button>
+                <button class="subtab" data-subtab="projects-unallocated">Unallocated</button>
+                <button class="subtab" data-subtab="people-recommendations">Recommendations</button>
+            </div>
+
+            <!-- Timeline Subtab -->
+            <div id="projects-timeline" class="subtab-content active">
+                <div class="filter-bar" id="timeline-program-filter-bar">
+                    <label for="timeline-program-filter" style="margin: 0;">Program Filter:</label>
+                    <select id="timeline-program-filter">
+                        <option value="__all__">All Programs</option>
+                    </select>
+                    <label for="timeline-sort" style="margin: 0; margin-left: 1.5rem;">Sort By:</label>
+                    <button id="sort-by-program-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Program</button>
+                    <button id="sort-by-start-date-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Start Date</button>
+                </div>
+                <div id="projects-timeline-container">
+                    <div class="empty-state">Run the model to view project timeline</div>
+                </div>
+            </div>
+
+            <!-- Resource Allocation Subtab -->
+            <div id="people-allocation" class="subtab-content">
+                <div id="resource-allocation-container">
+                    <div class="empty-state">Run the model to view resource allocation</div>
+                </div>
+            </div>
+
+            <!-- Unallocated Subtab -->
+            <div id="projects-unallocated" class="subtab-content">
+                <div id="projects-unallocated-container">
+                    <div class="empty-state">Run the model to view unallocated work</div>
+                </div>
+            </div>
+
+            <!-- Recommendations Subtab -->
+            <div id="people-recommendations" class="subtab-content">
+                <div id="resourcing-recommendations-container">
+                    <div class="empty-state">Run the model in aggressive mode to view hiring recommendations</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1695,6 +1740,23 @@
 
 <script>
     window.initialJobs = {{ jobs|tojson }};
+
+    // Global Run Model button handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const globalRunBtn = document.getElementById('global-run-model-btn');
+        if (globalRunBtn) {
+            globalRunBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Trigger the run form submit
+                const runForm = document.getElementById('run-form');
+                if (runForm) {
+                    runForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                } else {
+                    alert('Please select a portfolio first');
+                }
+            });
+        }
+    });
 </script>
 <!-- External libraries for recommendations tab -->
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
