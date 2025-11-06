@@ -23,3 +23,5 @@ node_modules/
 
 # Project-specific exclusions
 portfolios/earoadmap/
+/portfolios/ea-roadmap
+.DS_Store
