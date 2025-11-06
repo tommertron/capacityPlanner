@@ -3401,7 +3401,21 @@
     const concurrencyEntries = Object.entries(concurrencyMap).sort((a, b) => a[0].localeCompare(b[0]));
     const curveEntries = Object.entries(curvesMap).sort((a, b) => a[0].localeCompare(b[0]));
 
+    const friendlyName = configData.friendly_name || '';
+
     let html = '';
+
+    html += '<div class="config-section">';
+    html += '<h3>Portfolio Information</h3>';
+    html += '<div class="config-form-grid">';
+    html += '<div class="form-group" style="grid-column: span 2;">';
+    const friendlyNamePath = encodeConfigPath(['friendly_name']);
+    html += '<label for="friendly-name-input">Portfolio Display Name</label>';
+    html += `<input id="friendly-name-input" type="text" data-field="friendly_name" data-config-path="${friendlyNamePath}" data-type="string" value="${escapeHtml(friendlyName)}" placeholder="e.g. Enterprise Architecture Roadmap">`;
+    html += '<small style="color: var(--gray-600); font-size: 0.75rem; margin-top: 0.25rem; display: block;">This name will appear in reports and exports</small>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
 
     html += '<div class="config-section">';
     html += '<h3>Planning Window</h3>';
@@ -4623,7 +4637,9 @@
   }
 
   // Helper function to create results metadata banner
-  async function createResultsMetadata() {
+  async function createResultsMetadata(options = {}) {
+    const { includeModelSettings = true } = options;
+
     try {
       // Fetch file info and config in parallel
       const [fileResponse, configResponse] = await Promise.all([
@@ -4650,12 +4666,15 @@
       const solver = config.solver || 'greedy';
       const allocationMode = config.allocation_mode || 'strict';
 
-      const metadataHtml = `
+      let metadataHtml = `
         <div class="results-metadata">
           <div class="results-metadata-item">
             <span class="results-metadata-label">📅 Generated:</span>
             <span class="results-metadata-value">${generatedDate.toLocaleString()}</span>
-          </div>
+          </div>`;
+
+      if (includeModelSettings) {
+        metadataHtml += `
           <div class="results-metadata-item">
             <span class="results-metadata-label">🔧 Solver:</span>
             <span class="results-metadata-value">${solver === 'greedy' ? 'Greedy (heuristic)' : 'OR-Tools (optimization)'}</span>
@@ -4663,7 +4682,10 @@
           <div class="results-metadata-item">
             <span class="results-metadata-label">⚙️ Mode:</span>
             <span class="results-metadata-value">${allocationMode === 'strict' ? 'Strict (capacity limits)' : 'Aggressive (show hiring needs)'}</span>
-          </div>
+          </div>`;
+      }
+
+      metadataHtml += `
         </div>
       `;
 
@@ -5079,6 +5101,115 @@
     sortByStartDateBtn.addEventListener('click', () => {
       timelineSortMode = 'start_date';
       rerenderTimelineFromCache();
+    });
+  }
+
+  // Export timeline as PNG
+  const exportTimelinePngBtn = document.getElementById('export-timeline-png-btn');
+  if (exportTimelinePngBtn) {
+    exportTimelinePngBtn.addEventListener('click', async () => {
+      const container = document.getElementById('projects-timeline-container');
+      if (!container || !cachedTimelineData || cachedTimelineData.length === 0) {
+        alert('No timeline data to export. Please run the model first.');
+        return;
+      }
+
+      try {
+        exportTimelinePngBtn.disabled = true;
+        exportTimelinePngBtn.innerHTML = '⏳ Generating...';
+
+        // Fetch config to get friendly name
+        let portfolioDisplayName = selectedPortfolio;
+        try {
+          const configResponse = await fetch(`/api/config/${selectedPortfolio}`);
+          if (configResponse.ok) {
+            const config = await configResponse.json();
+            if (config.friendly_name && config.friendly_name.trim()) {
+              portfolioDisplayName = config.friendly_name.trim();
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch friendly name, using portfolio ID');
+        }
+
+        // Create a wrapper with title and simplified metadata
+        const exportWrapper = document.createElement('div');
+        exportWrapper.style.cssText = 'background: white; padding: 2rem; width: fit-content;';
+
+        // Add title
+        const title = document.createElement('h2');
+        title.textContent = `${portfolioDisplayName} - Project Timeline`;
+        title.style.cssText = 'margin: 0 0 1rem 0; color: #1f2937; font-size: 1.5rem;';
+        exportWrapper.appendChild(title);
+
+        // Add simplified metadata (without solver/mode)
+        const metadataHtml = await createResultsMetadata({ includeModelSettings: false });
+        if (metadataHtml) {
+          const metadataDiv = document.createElement('div');
+          metadataDiv.innerHTML = metadataHtml;
+          exportWrapper.appendChild(metadataDiv);
+        }
+
+        // Clone the timeline content
+        const timelineClone = container.cloneNode(true);
+
+        // Remove any existing metadata from the clone
+        const existingMetadata = timelineClone.querySelector('.results-metadata');
+        if (existingMetadata) {
+          existingMetadata.remove();
+        }
+
+        timelineClone.style.cssText = 'margin-top: 1rem;';
+        exportWrapper.appendChild(timelineClone);
+
+        // Temporarily add to body for rendering
+        exportWrapper.style.position = 'absolute';
+        exportWrapper.style.left = '-9999px';
+        exportWrapper.style.top = '0';
+        document.body.appendChild(exportWrapper);
+
+        // Get the full dimensions
+        const fullWidth = exportWrapper.scrollWidth;
+        const fullHeight = exportWrapper.scrollHeight;
+
+        // Use html2canvas to capture the wrapper
+        const canvas = await html2canvas(exportWrapper, {
+          backgroundColor: '#ffffff',
+          scale: 2, // Higher quality
+          logging: false,
+          useCORS: true,
+          width: fullWidth,
+          height: fullHeight,
+          windowWidth: fullWidth,
+          windowHeight: fullHeight,
+          x: 0,
+          y: 0
+        });
+
+        // Remove temporary wrapper
+        document.body.removeChild(exportWrapper);
+
+        // Convert to blob and download
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const portfolioName = selectedPortfolio || 'timeline';
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+          link.download = `${portfolioName}_timeline_${timestamp}.png`;
+          link.href = url;
+          link.click();
+          URL.revokeObjectURL(url);
+
+          exportTimelinePngBtn.disabled = false;
+          exportTimelinePngBtn.innerHTML = '📥 Export PNG';
+        });
+
+      } catch (err) {
+        console.error('Error exporting timeline:', err);
+        alert('Failed to export timeline. Please try again.');
+        exportTimelinePngBtn.disabled = false;
+        exportTimelinePngBtn.innerHTML = '📥 Export PNG';
+      }
     });
   }
 

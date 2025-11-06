@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Capacity Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -1445,6 +1446,7 @@
                     <label for="timeline-sort" style="margin: 0; margin-left: 1.5rem;">Sort By:</label>
                     <button id="sort-by-program-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Program</button>
                     <button id="sort-by-start-date-btn" class="btn-primary" style="padding: 0.5rem 1rem;">Sort by Start Date</button>
+                    <button id="export-timeline-png-btn" class="btn-primary" style="padding: 0.5rem 1rem; margin-left: 1.5rem; background: #059669;">📥 Export PNG</button>
                 </div>
                 <div id="projects-timeline-container">
                     <div class="empty-state">Run the model to view project timeline</div>
