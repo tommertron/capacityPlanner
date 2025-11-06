@@ -152,6 +152,57 @@ def create_app() -> Flask:
         except (ValueError, OSError):
             abort(404)
 
+    @app.get("/api/files/<portfolio_name>")
+    def get_file_info(portfolio_name: str):
+        """Get file information with modification dates for a portfolio"""
+        import datetime
+        try:
+            portfolio_path = projects_root / portfolio_name
+            portfolio_path = portfolio_path.resolve()
+            _validate_within_root(portfolio_path, projects_root)
+
+            if not portfolio_path.exists() or not portfolio_path.is_dir():
+                return jsonify({"error": "Portfolio not found"}), 404
+
+            file_info = {
+                "input": [],
+                "output": []
+            }
+
+            # Check input files
+            input_dir = portfolio_path / "input"
+            if input_dir.exists() and input_dir.is_dir():
+                input_files = ["projects.csv", "people.json", "config.json", "programs.csv"]
+                for filename in input_files:
+                    file_path = input_dir / filename
+                    if file_path.exists() and file_path.is_file():
+                        stat = file_path.stat()
+                        file_info["input"].append({
+                            "name": filename,
+                            "path": f"input/{filename}",
+                            "modified": datetime.datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                            "size": stat.st_size
+                        })
+
+            # Check output files
+            output_dir = portfolio_path / "output"
+            if output_dir.exists() and output_dir.is_dir():
+                output_files = ["project_timeline.csv", "resource_capacity.csv", "unallocated_projects.md"]
+                for filename in output_files:
+                    file_path = output_dir / filename
+                    if file_path.exists() and file_path.is_file():
+                        stat = file_path.stat()
+                        file_info["output"].append({
+                            "name": filename,
+                            "path": f"output/{filename}",
+                            "modified": datetime.datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                            "size": stat.st_size
+                        })
+
+            return jsonify(file_info)
+        except (ValueError, OSError) as e:
+            return jsonify({"error": str(e)}), 400
+
     @app.get("/api/people/<portfolio_name>")
     def get_people(portfolio_name: str):
         """Get people.json for a portfolio"""

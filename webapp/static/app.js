@@ -584,6 +584,18 @@
       updateTimelineProgramFilterOptions([]);
       updateProjectDirInput();
 
+      // Check if there are running jobs for the newly selected portfolio
+      checkRunningJobsForPortfolio();
+
+      // Remove results badge when changing portfolios
+      const resultsTab = document.querySelector('.tab[data-tab="results"]');
+      if (resultsTab) {
+        const badge = resultsTab.querySelector('.results-badge');
+        if (badge) {
+          badge.remove();
+        }
+      }
+
       // Refresh data if on those tabs
       const activeTab = document.querySelector('.tab.active');
       if (activeTab) {
@@ -676,6 +688,70 @@
     }
   }
 
+  function setRunButtonsState(isRunning) {
+    const globalRunBtn = document.getElementById('global-run-model-btn');
+    const runFormBtn = document.querySelector('#run-form button[type="submit"]');
+
+    [globalRunBtn, runFormBtn].forEach(btn => {
+      if (btn) {
+        btn.disabled = isRunning;
+        if (isRunning) {
+          btn.dataset.originalText = btn.textContent;
+          btn.innerHTML = '⏳ Running...';
+          btn.style.opacity = '0.7';
+          btn.style.cursor = 'wait';
+        } else {
+          btn.innerHTML = btn.dataset.originalText || '▶ Run Model';
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+        }
+      }
+    });
+  }
+
+  function showSuccessNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      z-index: 10000;
+      font-weight: 600;
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 4000);
+  }
+
+  function checkRunningJobsForPortfolio() {
+    // Check if any jobs are still running for the current portfolio
+    const rows = jobsTableBody.querySelectorAll('tr');
+    let hasRunningJob = false;
+
+    rows.forEach(row => {
+      const state = row.querySelector('.job-state');
+      const portfolio = row.querySelector('.job-project');
+
+      if (state && portfolio &&
+          portfolio.textContent.trim() === selectedPortfolio &&
+          !isTerminal(state.textContent.trim())) {
+        hasRunningJob = true;
+      }
+    });
+
+    setRunButtonsState(hasRunningJob);
+  }
+
   function pollStatus(jobId, statusUrl) {
     if (!jobId || pollers.has(jobId)) {
       return;
@@ -687,32 +763,79 @@
         const response = await fetch(url);
         if (!response.ok) {
           stopPolling(jobId);
-          setStatus(`Failed to fetch status for job ${jobId}: ${response.status}`);
+          setStatus(`❌ Failed to fetch status for job ${jobId}: ${response.status}`);
+          checkRunningJobsForPortfolio();
           return;
         }
         const job = await response.json();
         updateJobRow(job);
+
+        // Update status message based on job state
+        if (job.state === 'running' && job.project_dir === selectedPortfolio) {
+          setStatus(`⏳ Model is running for ${job.project_dir}... (Job ${job.id})`);
+          setRunButtonsState(true);
+        } else if (job.state === 'queued' && job.project_dir === selectedPortfolio) {
+          setStatus(`⏱️ Job ${job.id} is queued for ${job.project_dir}...`);
+          setRunButtonsState(true);
+        }
+
         if (isTerminal(job.state)) {
           stopPolling(jobId);
-          setStatus(`Job ${job.id} ${job.state}. Return code: ${job.returncode ?? 'n/a'}.`);
-          if (job.state === 'done' && job.project_dir && job.project_dir === selectedPortfolio) {
-            cachedTimelineData = null;
-            cachedTimelinePortfolio = null;
-            cachedUnallocatedHtml = null;
-            cachedUnallocatedPortfolio = null;
-            const timelineSection = document.getElementById('projects-timeline');
-            if (timelineSection && timelineSection.classList.contains('active')) {
-              loadProjectsTimeline({ forceReload: true });
+
+          if (job.state === 'done') {
+            setStatus(`✅ Model completed successfully for ${job.project_dir}! (Job ${job.id})`);
+
+            if (job.project_dir && job.project_dir === selectedPortfolio) {
+              showSuccessNotification(`✅ Results ready! Click the Results tab to view.`);
+
+              // Clear caches so results reload fresh
+              cachedTimelineData = null;
+              cachedTimelinePortfolio = null;
+              cachedUnallocatedHtml = null;
+              cachedUnallocatedPortfolio = null;
+
+              // Add a badge to the Results tab to indicate new results
+              const resultsTab = document.querySelector('.tab[data-tab="results"]');
+              if (resultsTab && !resultsTab.querySelector('.results-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'results-badge';
+                badge.textContent = '●';
+                badge.style.cssText = `
+                  color: #10b981;
+                  margin-left: 0.5rem;
+                  font-size: 1rem;
+                  animation: pulse 2s infinite;
+                `;
+                resultsTab.appendChild(badge);
+              }
+
+              // If already on Results tab, reload the active subtab
+              const activeTab = document.querySelector('.tab.active');
+              if (activeTab && activeTab.dataset.tab === 'results') {
+                const activeSubtab = document.querySelector('#results .subtab.active');
+                if (activeSubtab) {
+                  const subtabName = activeSubtab.dataset.subtab;
+                  if (subtabName === 'projects-timeline') {
+                    loadProjectsTimeline({ forceReload: true });
+                  } else if (subtabName === 'projects-unallocated') {
+                    loadUnallocatedProjects({ forceReload: true });
+                  } else if (subtabName === 'people-allocation') {
+                    loadResourceAllocation();
+                  }
+                }
+              }
             }
-            const unallocatedSection = document.getElementById('projects-unallocated');
-            if (unallocatedSection && unallocatedSection.classList.contains('active')) {
-              loadUnallocatedProjects({ forceReload: true });
-            }
+          } else {
+            setStatus(`❌ Job ${job.id} failed. Return code: ${job.returncode ?? 'n/a'}. Message: ${job.message || 'None'}`);
           }
+
+          // Check if any other jobs are still running for this portfolio
+          checkRunningJobsForPortfolio();
         }
       } catch (err) {
         stopPolling(jobId);
-        setStatus(`Error polling job ${jobId}: ${err}`);
+        setStatus(`❌ Error polling job ${jobId}: ${err}`);
+        checkRunningJobsForPortfolio();
       }
     };
 
@@ -724,11 +847,13 @@
     event.preventDefault();
 
     if (!selectedPortfolio) {
-      setStatus('Please select a portfolio from the dropdown above.');
+      setStatus('⚠️ Please select a portfolio from the dropdown above.');
       return;
     }
 
-    setStatus(`Queuing run for ${selectedPortfolio}...`);
+    setStatus(`🚀 Starting model run for ${selectedPortfolio}...`);
+    setRunButtonsState(true);
+
     try {
       const response = await fetch('/run', {
         method: 'POST',
@@ -739,13 +864,15 @@
       });
       const payload = await response.json();
       if (!response.ok) {
-        setStatus(payload && payload.error ? payload.error : 'Failed to queue job.');
+        setStatus(payload && payload.error ? `❌ ${payload.error}` : '❌ Failed to queue job.');
+        setRunButtonsState(false);
         return;
       }
-      setStatus(`Job ${payload.job_id} queued for ${selectedPortfolio}.`);
+      setStatus(`⏱️ Job ${payload.job_id} queued for ${selectedPortfolio}...`);
       pollStatus(payload.job_id, payload.status_url);
     } catch (err) {
-      setStatus(`Unable to start job: ${err}`);
+      setStatus(`❌ Unable to start job: ${err}`);
+      setRunButtonsState(false);
     }
   }
 
@@ -762,6 +889,8 @@
       }
     }
   });
+  // Check for running jobs after all initial jobs are loaded
+  checkRunningJobsForPortfolio();
   delete window.initialJobs;
 
   refreshDirList();
@@ -785,6 +914,29 @@
         targetContent.classList.add('active');
       }
 
+      // Remove the results badge if switching to Results tab
+      if (targetTab === 'results') {
+        const badge = tab.querySelector('.results-badge');
+        if (badge) {
+          badge.remove();
+        }
+
+        // Load the currently active subtab
+        const activeSubtab = document.querySelector('#results .subtab.active');
+        if (activeSubtab) {
+          const subtabName = activeSubtab.dataset.subtab;
+          if (subtabName === 'projects-timeline') {
+            loadProjectsTimeline();
+          } else if (subtabName === 'projects-unallocated') {
+            loadUnallocatedProjects();
+          } else if (subtabName === 'people-allocation') {
+            loadResourceAllocation();
+          } else if (subtabName === 'people-recommendations') {
+            loadRecommendations();
+          }
+        }
+      }
+
       // Load data when switching tabs
       if (targetTab === 'files') {
         loadFiles();
@@ -795,6 +947,7 @@
         loadProjects();
       } else if (targetTab === 'settings') {
         loadConfig();
+        loadModellerSettings();
       } else if (targetTab === 'modelling') {
         loadModellerSettings();
       }
@@ -848,80 +1001,102 @@
       return;
     }
 
-    container.innerHTML = '';
+    container.innerHTML = '<div class="empty-state">Loading files...</div>';
 
-    // Input files section
-    const inputSection = document.createElement('div');
-    inputSection.style.marginBottom = '2rem';
+    try {
+      const response = await fetch(`/api/files/${selectedPortfolio}`);
+      if (!response.ok) {
+        container.innerHTML = '<div class="empty-state">Error loading file information</div>';
+        return;
+      }
 
-    const inputTitle = document.createElement('h3');
-    inputTitle.textContent = 'Input Files';
-    inputTitle.style.marginBottom = '1rem';
-    inputTitle.style.fontSize = '1.1rem';
-    inputTitle.style.color = 'var(--gray-800)';
-    inputSection.appendChild(inputTitle);
+      const fileData = await response.json();
+      container.innerHTML = '';
 
-    const inputFiles = ['projects.csv', 'people.json', 'config.json'];
-    const inputFileList = document.createElement('div');
-    inputFileList.className = 'file-list';
+      // Helper function to format date
+      function formatDate(isoString) {
+        const date = new Date(isoString);
+        return date.toLocaleString();
+      }
 
-    for (const fileName of inputFiles) {
-      const fileItem = document.createElement('div');
-      fileItem.className = 'file-item';
-      fileItem.style.background = 'var(--gray-50)';
-      fileItem.style.border = '1px solid var(--gray-200)';
-      fileItem.style.borderRadius = 'var(--border-radius)';
-      fileItem.style.padding = '0.75rem';
-      fileItem.style.marginBottom = '0.5rem';
+      // Helper function to create file section
+      function createFileSection(title, files, type) {
+        const section = document.createElement('div');
+        section.style.marginBottom = '2rem';
 
-      const fileLink = document.createElement('a');
-      fileLink.className = 'file-link';
-      fileLink.href = `/files/${selectedPortfolio}/input/${fileName}`;
-      fileLink.textContent = `input/${fileName}`;
-      fileLink.target = '_blank';
-      fileLink.rel = 'noopener';
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = title;
+        sectionTitle.style.marginBottom = '1rem';
+        sectionTitle.style.fontSize = '1.1rem';
+        sectionTitle.style.color = 'var(--gray-800)';
+        section.appendChild(sectionTitle);
 
-      fileItem.appendChild(fileLink);
-      inputFileList.appendChild(fileItem);
+        if (files.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.style.color = 'var(--gray-600)';
+          emptyMsg.style.fontSize = '0.875rem';
+          emptyMsg.textContent = `No ${type} files found`;
+          section.appendChild(emptyMsg);
+          return section;
+        }
+
+        const fileList = document.createElement('div');
+        fileList.className = 'file-list';
+
+        for (const file of files) {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.style.background = 'var(--gray-50)';
+          fileItem.style.border = '1px solid var(--gray-200)';
+          fileItem.style.borderRadius = 'var(--border-radius)';
+          fileItem.style.padding = '0.75rem';
+          fileItem.style.marginBottom = '0.5rem';
+          fileItem.style.display = 'flex';
+          fileItem.style.justifyContent = 'space-between';
+          fileItem.style.alignItems = 'center';
+          fileItem.style.gap = '1rem';
+
+          const fileLink = document.createElement('a');
+          fileLink.className = 'file-link';
+          fileLink.href = `/files/${selectedPortfolio}/${file.path}`;
+          fileLink.textContent = file.path;
+          fileLink.target = '_blank';
+          fileLink.rel = 'noopener';
+          fileLink.style.flex = '1';
+
+          const fileInfo = document.createElement('div');
+          fileInfo.style.display = 'flex';
+          fileInfo.style.flexDirection = 'column';
+          fileInfo.style.alignItems = 'flex-end';
+          fileInfo.style.fontSize = '0.75rem';
+          fileInfo.style.color = 'var(--gray-600)';
+          fileInfo.style.whiteSpace = 'nowrap';
+
+          const modifiedDate = document.createElement('div');
+          modifiedDate.textContent = formatDate(file.modified);
+          fileInfo.appendChild(modifiedDate);
+
+          fileItem.appendChild(fileLink);
+          fileItem.appendChild(fileInfo);
+          fileList.appendChild(fileItem);
+        }
+
+        section.appendChild(fileList);
+        return section;
+      }
+
+      // Input files section
+      const inputSection = createFileSection('Input Files', fileData.input, 'input');
+      container.appendChild(inputSection);
+
+      // Output files section
+      const outputSection = createFileSection('Output Files', fileData.output, 'output');
+      container.appendChild(outputSection);
+
+    } catch (err) {
+      console.error('Error loading files:', err);
+      container.innerHTML = '<div class="empty-state">Error loading files</div>';
     }
-    inputSection.appendChild(inputFileList);
-    container.appendChild(inputSection);
-
-    // Output files section
-    const outputSection = document.createElement('div');
-
-    const outputTitle = document.createElement('h3');
-    outputTitle.textContent = 'Output Files';
-    outputTitle.style.marginBottom = '1rem';
-    outputTitle.style.fontSize = '1.1rem';
-    outputTitle.style.color = 'var(--gray-800)';
-    outputSection.appendChild(outputTitle);
-
-    const outputFiles = ['project_timeline.csv', 'resource_capacity.csv', 'unallocated_projects.md'];
-    const outputFileList = document.createElement('div');
-    outputFileList.className = 'file-list';
-
-    for (const fileName of outputFiles) {
-      const fileItem = document.createElement('div');
-      fileItem.className = 'file-item';
-      fileItem.style.background = 'var(--gray-50)';
-      fileItem.style.border = '1px solid var(--gray-200)';
-      fileItem.style.borderRadius = 'var(--border-radius)';
-      fileItem.style.padding = '0.75rem';
-      fileItem.style.marginBottom = '0.5rem';
-
-      const fileLink = document.createElement('a');
-      fileLink.className = 'file-link';
-      fileLink.href = `/files/${selectedPortfolio}/output/${fileName}`;
-      fileLink.textContent = `output/${fileName}`;
-      fileLink.target = '_blank';
-      fileLink.rel = 'noopener';
-
-      fileItem.appendChild(fileLink);
-      outputFileList.appendChild(fileItem);
-    }
-    outputSection.appendChild(outputFileList);
-    container.appendChild(outputSection);
   }
 
   // Load and display resource allocation heatmap
@@ -1312,8 +1487,22 @@
     html += '<span id="allocation-changes-count" style="margin-left: 16px; color: var(--blue-600);"></span>';
     html += '</div>';
 
-    container.innerHTML = html;
+    // Add metadata banner at the top
+    createResultsMetadata().then(metadataHtml => {
+      if (metadataHtml) {
+        container.innerHTML = metadataHtml + html;
+        attachAllocationEventHandlers(container);
+      } else {
+        container.innerHTML = html;
+        attachAllocationEventHandlers(container);
+      }
+    }).catch(() => {
+      container.innerHTML = html;
+      attachAllocationEventHandlers(container);
+    });
+  }
 
+  function attachAllocationEventHandlers(container) {
     // Add click handlers for role-level rows (top level)
     const roleNames = container.querySelectorAll('.role-row .resource-name[data-role-index]');
     roleNames.forEach(nameCell => {
@@ -2175,6 +2364,7 @@
         loadProjects();
       } else if (activeTab && activeTab.dataset.tab === 'settings') {
         loadConfig();
+        loadModellerSettings();
       } else if (activeTab && activeTab.dataset.tab === 'modelling') {
         loadModellerSettings();
       }
@@ -4225,6 +4415,58 @@
     discardProjectsBtn.addEventListener('click', discardProjectChanges);
   }
 
+  // Helper function to create results metadata banner
+  async function createResultsMetadata() {
+    try {
+      // Fetch file info and config in parallel
+      const [fileResponse, configResponse] = await Promise.all([
+        fetch(`/api/files/${selectedPortfolio}`),
+        fetch(`/api/config/${selectedPortfolio}`)
+      ]);
+
+      if (!fileResponse.ok || !configResponse.ok) return null;
+
+      const fileData = await fileResponse.json();
+      const config = await configResponse.json();
+
+      // Find the most recent output file timestamp
+      const outputFiles = fileData.output || [];
+      if (outputFiles.length === 0) return null;
+
+      const mostRecentFile = outputFiles.reduce((latest, file) => {
+        const fileDate = new Date(file.modified);
+        const latestDate = new Date(latest.modified);
+        return fileDate > latestDate ? file : latest;
+      });
+
+      const generatedDate = new Date(mostRecentFile.modified);
+      const solver = config.solver || 'greedy';
+      const allocationMode = config.allocation_mode || 'strict';
+
+      const metadataHtml = `
+        <div class="results-metadata">
+          <div class="results-metadata-item">
+            <span class="results-metadata-label">📅 Generated:</span>
+            <span class="results-metadata-value">${generatedDate.toLocaleString()}</span>
+          </div>
+          <div class="results-metadata-item">
+            <span class="results-metadata-label">🔧 Solver:</span>
+            <span class="results-metadata-value">${solver === 'greedy' ? 'Greedy (heuristic)' : 'OR-Tools (optimization)'}</span>
+          </div>
+          <div class="results-metadata-item">
+            <span class="results-metadata-label">⚙️ Mode:</span>
+            <span class="results-metadata-value">${allocationMode === 'strict' ? 'Strict (capacity limits)' : 'Aggressive (show hiring needs)'}</span>
+          </div>
+        </div>
+      `;
+
+      return metadataHtml;
+    } catch (err) {
+      console.error('Error creating results metadata:', err);
+      return null;
+    }
+  }
+
   // Load projects timeline
   async function loadProjectsTimeline(options = {}) {
     const { forceReload = false } = options || {};
@@ -4313,9 +4555,18 @@
 
       const bodyHtml = markdownToHtml(markdownText);
       const wrapped = `<div class="markdown-body">${bodyHtml}</div>`;
-      container.innerHTML = wrapped;
-      cachedUnallocatedHtml = wrapped;
-      cachedUnallocatedPortfolio = selectedPortfolio;
+
+      // Add metadata banner
+      createResultsMetadata().then(metadataHtml => {
+        const fullHtml = metadataHtml ? metadataHtml + wrapped : wrapped;
+        container.innerHTML = fullHtml;
+        cachedUnallocatedHtml = fullHtml;
+        cachedUnallocatedPortfolio = selectedPortfolio;
+      }).catch(() => {
+        container.innerHTML = wrapped;
+        cachedUnallocatedHtml = wrapped;
+        cachedUnallocatedPortfolio = selectedPortfolio;
+      });
     } catch (err) {
       console.error('Error loading unallocated projects:', err);
       const message = '<div class="empty-state">Error loading unallocated projects summary</div>';
@@ -4453,7 +4704,17 @@
     });
 
     html += '</tbody></table></div>';
-    container.innerHTML = html;
+
+    // Add metadata banner at the top
+    createResultsMetadata().then(metadataHtml => {
+      if (metadataHtml) {
+        container.innerHTML = metadataHtml + html;
+      } else {
+        container.innerHTML = html;
+      }
+    }).catch(() => {
+      container.innerHTML = html;
+    });
 
     if (filterAdjusted) {
       renderEditableProjectsTable();
