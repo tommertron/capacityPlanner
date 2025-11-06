@@ -29,6 +29,8 @@
   let cachedTimelinePortfolio = null;
   let cachedUnallocatedHtml = null;
   let cachedUnallocatedPortfolio = null;
+  let cachedResourceAllocationData = null;
+  let cachedResourceAllocationPortfolio = null;
   const PROGRAM_FILTER_ALL = '__all__';
   const PROGRAM_FILTER_NO_PROGRAM = '__no_program__';
   let projectProgramFilter = PROGRAM_FILTER_ALL;
@@ -575,6 +577,8 @@
       modellerConfigCache = null;
       cachedTimelineData = null;
       cachedTimelinePortfolio = null;
+      cachedResourceAllocationData = null;
+      cachedResourceAllocationPortfolio = null;
       cachedUnallocatedHtml = null;
       cachedUnallocatedPortfolio = null;
       projectsData = [];
@@ -791,6 +795,8 @@
               // Clear caches so results reload fresh
               cachedTimelineData = null;
               cachedTimelinePortfolio = null;
+              cachedResourceAllocationData = null;
+              cachedResourceAllocationPortfolio = null;
               cachedUnallocatedHtml = null;
               cachedUnallocatedPortfolio = null;
 
@@ -4489,22 +4495,45 @@
     container.innerHTML = '<div class="empty-state">Loading timeline...</div>';
 
     try {
-      const response = await fetch(`/files/${selectedPortfolio}/output/project_timeline.csv`);
-      if (!response.ok) {
+      // Fetch both timeline and resource allocation data in parallel
+      const [timelineResponse, resourceResponse] = await Promise.all([
+        fetch(`/files/${selectedPortfolio}/output/project_timeline.csv`),
+        fetch(`/files/${selectedPortfolio}/output/resource_capacity.csv`)
+      ]);
+
+      if (!timelineResponse.ok) {
         cachedTimelineData = null;
         cachedTimelinePortfolio = selectedPortfolio;
+        cachedResourceAllocationData = null;
+        cachedResourceAllocationPortfolio = null;
         updateTimelineProgramFilterOptions([]);
         container.innerHTML = '<div class="empty-state">No timeline data found. Run the portfolio first to generate results.</div>';
         return;
       }
 
-      const csvText = await response.text();
-      const data = parseCSV(csvText);
-      cachedTimelineData = data;
+      const timelineText = await timelineResponse.text();
+      const timelineData = parseCSV(timelineText);
+      cachedTimelineData = timelineData;
       cachedTimelinePortfolio = selectedPortfolio;
-      renderProjectTimeline(data, container);
+
+      // Load resource allocation data if available
+      if (resourceResponse.ok) {
+        const resourceText = await resourceResponse.text();
+        const resourceData = parseCSV(resourceText);
+        cachedResourceAllocationData = resourceData;
+        cachedResourceAllocationPortfolio = selectedPortfolio;
+      } else {
+        cachedResourceAllocationData = null;
+        cachedResourceAllocationPortfolio = null;
+      }
+
+      renderProjectTimeline(timelineData, container);
     } catch (err) {
       console.error('Error loading timeline:', err);
+      cachedTimelineData = null;
+      cachedTimelinePortfolio = null;
+      cachedResourceAllocationData = null;
+      cachedResourceAllocationPortfolio = null;
       updateTimelineProgramFilterOptions([]);
       container.innerHTML = '<div class="empty-state">Error loading timeline data</div>';
     }
@@ -4658,7 +4687,7 @@
       const programName = row.parent_summary || '';
       const programColor = getProgramColor(programName, rowIndex);
       const rowBackground = getProgramBackground(programColor);
-      const rowAttributes = ` data-program-color="${programColor}" style="--program-color:${programColor}; --program-bg:${rowBackground};"`;
+      const rowAttributes = ` data-program-color="${programColor}" data-project-id="${row.id || ''}" style="--program-color:${programColor}; --program-bg:${rowBackground};"`;
 
       const projectCellStyles = [];
       if (programColor) {
@@ -4668,8 +4697,9 @@
         projectCellStyles.push(`background:${rowBackground}`);
       }
 
-      html += `<tr${rowAttributes}>`;
-      html += `<td class="project-name"${projectCellStyles.length ? ` style="${projectCellStyles.join('; ')}"` : ''}>`;
+      html += `<tr class="project-row"${rowAttributes}>`;
+      html += `<td class="project-name expandable-project"${projectCellStyles.length ? ` style="cursor: pointer; ${projectCellStyles.join('; ')}"` : ' style="cursor: pointer;"'}>`;
+      html += `<span class="expand-icon" style="display: inline-block; margin-right: 0.5rem; transition: transform 0.2s; font-size: 0.75rem;">▶</span>`;
       html += `${row.id || ''} - ${row.name || ''}<br>`;
       html += `<span class="project-details">`;
       html += `${programName || ''} | ${row.duration_months || '0'} month(s)`;
@@ -4701,6 +4731,29 @@
       });
 
       html += '</tr>';
+
+      // Add resource detail rows (hidden by default)
+      if (cachedResourceAllocationData) {
+        const projectResources = getProjectResources(row.id, sortedMonths);
+        projectResources.forEach(resource => {
+          html += `<tr class="resource-row" data-project-child="${row.id}" style="display: none; background: var(--gray-50);">`;
+          html += `<td class="resource-name" style="padding-left: 3rem; font-size: 0.875rem; color: var(--gray-700);">`;
+          html += `${resource.person} (${resource.role})`;
+          html += `</td>`;
+
+          sortedMonths.forEach((month) => {
+            const alloc = resource.allocations[month] || 0;
+            if (alloc > 0) {
+              const percentage = Math.round(alloc * 100);
+              html += `<td style="text-align: center; font-size: 0.75rem; color: var(--gray-600);">${percentage}%</td>`;
+            } else {
+              html += '<td></td>';
+            }
+          });
+
+          html += '</tr>';
+        });
+      }
     });
 
     html += '</tbody></table></div>';
@@ -4712,13 +4765,64 @@
       } else {
         container.innerHTML = html;
       }
+      attachTimelineExpandHandlers(container);
     }).catch(() => {
       container.innerHTML = html;
+      attachTimelineExpandHandlers(container);
     });
 
     if (filterAdjusted) {
       renderEditableProjectsTable();
     }
+  }
+
+  // Helper function to get resources assigned to a project
+  function getProjectResources(projectId, months) {
+    if (!cachedResourceAllocationData) return [];
+
+    // Group by person
+    const personMap = new Map();
+
+    cachedResourceAllocationData.forEach(row => {
+      if (row.project_id === projectId && row.person) {
+        if (!personMap.has(row.person)) {
+          personMap.set(row.person, {
+            person: row.person,
+            role: row.role || 'Unknown',
+            allocations: {}
+          });
+        }
+        const personData = personMap.get(row.person);
+        personData.allocations[row.month] = parseFloat(row.project_alloc_pct) || 0;
+      }
+    });
+
+    return Array.from(personMap.values());
+  }
+
+  // Attach expand/collapse handlers to timeline project rows
+  function attachTimelineExpandHandlers(container) {
+    const expandableProjects = container.querySelectorAll('.expandable-project');
+    expandableProjects.forEach(projectCell => {
+      projectCell.addEventListener('click', () => {
+        const projectRow = projectCell.closest('tr');
+        const projectId = projectRow.dataset.projectId;
+        const expandIcon = projectCell.querySelector('.expand-icon');
+        const resourceRows = container.querySelectorAll(`.resource-row[data-project-child="${projectId}"]`);
+
+        const isExpanded = expandIcon.style.transform === 'rotate(90deg)';
+
+        if (isExpanded) {
+          // Collapse
+          expandIcon.style.transform = '';
+          resourceRows.forEach(row => row.style.display = 'none');
+        } else {
+          // Expand
+          expandIcon.style.transform = 'rotate(90deg)';
+          resourceRows.forEach(row => row.style.display = '');
+        }
+      });
+    });
   }
 
   function rerenderTimelineFromCache() {
