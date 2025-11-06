@@ -4135,12 +4135,17 @@
 
         // Use dropdown for parent_summary (Program)
         if (col.key === 'parent_summary') {
+          const bgColor = programColor ? getProgramBackground(programColor) : '';
+          const colorStyle = programColor ? `color: ${programColor}; background: ${bgColor}; font-weight: 500;` : '';
           html += `<td class="${cellClass}" data-field="${col.key}" data-index="${dataIndex}">`;
-          html += `<select class="program-select" data-index="${dataIndex}" style="width: 100%; padding: 0.25rem; border: 1px solid var(--gray-300); border-radius: 4px; background: white;">`;
+          html += `<select class="program-select" data-index="${dataIndex}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px; background: white; white-space: normal; height: auto; min-height: 2.5rem; ${colorStyle}">`;
           html += `<option value="">No Program</option>`;
           programsData.forEach(prog => {
             const selected = prog.name === value ? 'selected' : '';
-            html += `<option value="${escapeHtml(prog.name)}" ${selected}>${escapeHtml(prog.name)}</option>`;
+            const optColor = getProgramColor(prog.name, 0);
+            const optBgColor = getProgramBackground(optColor);
+            const optStyle = `color: ${optColor}; background: ${optBgColor}; font-weight: 500;`;
+            html += `<option value="${escapeHtml(prog.name)}" ${selected} style="${optStyle}">${escapeHtml(prog.name)}</option>`;
           });
           html += `</select>`;
           html += `</td>`;
@@ -4150,10 +4155,14 @@
           const colorStyle = programColor ? `color: ${programColor}; background: ${bgColor};` : '';
           html += `<td class="${cellClass}" contenteditable="${isEditable}" data-field="${col.key}" data-index="${dataIndex}" style="${colorStyle}">${escapeHtml(value)}</td>`;
         } else if (col.key.startsWith('required_skillsets_')) {
-          // Use input with datalist for skills columns
-          const datalistId = `skills-datalist-${col.key}`;
-          html += `<td class="${cellClass}" data-field="${col.key}" data-index="${dataIndex}">`;
-          html += `<input type="text" class="skills-input" list="${datalistId}" value="${escapeHtml(value)}" data-field="${col.key}" data-index="${dataIndex}" style="width: 100%; padding: 0.25rem; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 0.875rem;" placeholder="skill1;skill2">`;
+          // Display skills with an edit button
+          const skillsList = value ? value.split(';').map(s => s.trim()).filter(s => s).join(', ') : '';
+          const roleType = col.key.replace('required_skillsets_', '');
+          html += `<td class="${cellClass}" data-field="${col.key}" data-index="${dataIndex}" style="position: relative;">`;
+          html += `<div style="display: flex; align-items: center; gap: 0.5rem;">`;
+          html += `<div style="flex: 1; font-size: 0.875rem; color: var(--gray-700); line-height: 1.4;">${escapeHtml(skillsList) || '<span style="color: var(--gray-400);">No skills</span>'}</div>`;
+          html += `<button class="edit-skills-btn" data-index="${dataIndex}" data-role="${roleType}" title="Edit Skills" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--blue-500); color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">Edit</button>`;
+          html += `</div>`;
           html += `</td>`;
         } else {
           html += `<td class="${cellClass}" contenteditable="${isEditable}" data-field="${col.key}" data-index="${dataIndex}">${escapeHtml(value)}</td>`;
@@ -4172,26 +4181,6 @@
     });
 
     html += '</tbody></table>';
-
-    // Add datalists for skills autocomplete
-    html += `<datalist id="skills-datalist-required_skillsets_ba">`;
-    skillsData.filter(s => !s.category || s.category === 'BA' || s.category === 'General').forEach(skill => {
-      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
-    });
-    html += `</datalist>`;
-
-    html += `<datalist id="skills-datalist-required_skillsets_planner">`;
-    skillsData.filter(s => !s.category || s.category === 'Planner' || s.category === 'General').forEach(skill => {
-      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
-    });
-    html += `</datalist>`;
-
-    html += `<datalist id="skills-datalist-required_skillsets_dev">`;
-    skillsData.filter(s => !s.category || s.category === 'Dev' || s.category === 'General').forEach(skill => {
-      html += `<option value="${escapeHtml(skill.skill_id)}">${escapeHtml(skill.name)}</option>`;
-    });
-    html += `</datalist>`;
-
     html += '</div>';
     container.innerHTML = html;
 
@@ -4211,19 +4200,14 @@
       });
     });
 
-    // Add input event listeners for skills inputs
-    const skillsInputs = container.querySelectorAll('.skills-input');
-    skillsInputs.forEach(input => {
-      input.addEventListener('input', (e) => {
+    // Add click event listeners for edit skills buttons
+    const editSkillsBtns = container.querySelectorAll('.edit-skills-btn');
+    editSkillsBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
         const index = parseInt(e.target.dataset.index);
-        const field = e.target.dataset.field;
-        const newValue = e.target.value;
-
-        if (projectsData[index]) {
-          projectsData[index][field] = newValue;
-          // Update change indicators without re-rendering
-          updateUnsavedIndicator();
-        }
+        const roleType = e.target.dataset.role;
+        openSkillsModal(index, roleType);
       });
     });
 
@@ -4260,6 +4244,223 @@
     if (filterChanged) {
       rerenderTimelineFromCache();
     }
+  }
+
+  // Open skills modal for editing project skills
+  function openSkillsModal(projectIndex, roleType) {
+    const project = projectsData[projectIndex];
+    if (!project) return;
+
+    const fieldKey = `required_skillsets_${roleType}`;
+    const currentSkills = project[fieldKey] ? project[fieldKey].split(';').map(s => s.trim()).filter(s => s) : [];
+
+    // Get available skills for this role
+    const roleCategory = roleType === 'ba' ? 'BA' : roleType === 'planner' ? 'Planner' : 'Dev';
+    const availableSkills = skillsData.filter(s => !s.category || s.category === roleCategory || s.category === 'General');
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'skills-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    `;
+
+    const projectName = project.name || project.id || 'Project';
+    const roleName = roleType.charAt(0).toUpperCase() + roleType.slice(1);
+
+    let html = `<h3 style="margin-top: 0; margin-bottom: 1rem; color: #1f2937; font-size: 1.25rem;">Edit ${roleName} Skills for ${projectName}</h3>`;
+
+    // Add new skill section
+    html += `<div style="margin-bottom: 1.5rem; padding: 1rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px;">`;
+    html += `<p style="font-size: 0.875rem; color: #1e40af; margin-bottom: 0.75rem; font-weight: 600;">➕ Add New Skill</p>`;
+    html += `<div style="display: flex; gap: 0.5rem; align-items: flex-start;">`;
+    html += `<input type="text" id="new-skill-name" placeholder="Skill name (e.g., Python, Agile)" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.875rem;">`;
+    html += `<button id="add-new-skill-btn" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; white-space: nowrap; font-size: 0.875rem;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">Add Skill</button>`;
+    html += `</div>`;
+    html += `<p id="add-skill-message" style="font-size: 0.75rem; margin-top: 0.5rem; min-height: 1rem;"></p>`;
+    html += `</div>`;
+
+    html += `<div style="margin-bottom: 1.5rem;">`;
+    html += `<p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">Check the boxes to add or remove skills:</p>`;
+    html += `<p style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 1rem;">✓ Checked = Required for project &nbsp; | &nbsp; ☐ Unchecked = Not required</p>`;
+
+    // Show available skills as checkboxes
+    html += `<div id="skills-list-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 4px; padding: 1rem; background: #f9fafb;">`;
+    if (availableSkills.length === 0) {
+      html += `<p style="color: #9ca3af; font-size: 0.875rem; text-align: center;">No skills available yet. Add your first skill above!</p>`;
+    } else {
+      availableSkills.forEach(skill => {
+        const isChecked = currentSkills.includes(skill.skill_id);
+        html += `<div style="margin-bottom: 0.5rem;">`;
+        html += `<label style="display: flex; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='transparent'">`;
+        html += `<input type="checkbox" class="skill-checkbox" value="${escapeHtml(skill.skill_id)}" ${isChecked ? 'checked' : ''} style="margin-right: 0.75rem; width: 16px; height: 16px; cursor: pointer;">`;
+        html += `<span style="font-size: 0.875rem; color: #374151;">${escapeHtml(skill.name)}</span>`;
+        html += `</label>`;
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+    html += `</div>`;
+
+    // Buttons
+    html += `<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">`;
+    html += `<button id="cancel-skills-btn" style="padding: 0.5rem 1rem; background: #e5e7eb; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#d1d5db'" onmouseout="this.style.background='#e5e7eb'">Cancel</button>`;
+    html += `<button id="save-skills-btn" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Save</button>`;
+    html += `</div>`;
+
+    modalContent.innerHTML = html;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Event listeners
+    const cancelBtn = modalContent.querySelector('#cancel-skills-btn');
+    const saveBtn = modalContent.querySelector('#save-skills-btn');
+    const addNewSkillBtn = modalContent.querySelector('#add-new-skill-btn');
+    const newSkillInput = modalContent.querySelector('#new-skill-name');
+    const messageEl = modalContent.querySelector('#add-skill-message');
+
+    cancelBtn.addEventListener('click', () => {
+      modal.remove();
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const checkboxes = modalContent.querySelectorAll('.skill-checkbox:checked');
+      const selectedSkills = Array.from(checkboxes).map(cb => cb.value);
+      projectsData[projectIndex][fieldKey] = selectedSkills.join(';');
+      updateUnsavedIndicator();
+      renderEditableProjectsTable();
+      modal.remove();
+    });
+
+    // Add new skill functionality
+    addNewSkillBtn.addEventListener('click', async () => {
+      const skillName = newSkillInput.value.trim();
+
+      if (!skillName) {
+        messageEl.style.color = '#dc2626';
+        messageEl.textContent = '⚠️ Please enter a skill name';
+        return;
+      }
+
+      // Generate skill_id from name
+      const skillId = skillName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+      // Check if skill already exists
+      if (skillsData.some(s => s.skill_id === skillId || s.name.toLowerCase() === skillName.toLowerCase())) {
+        messageEl.style.color = '#dc2626';
+        messageEl.textContent = '⚠️ This skill already exists';
+        return;
+      }
+
+      // Add to skillsData array
+      const newSkill = {
+        skill_id: skillId,
+        name: skillName,
+        category: roleCategory,
+        description: ''
+      };
+
+      skillsData.push(newSkill);
+
+      // Save to backend
+      try {
+        messageEl.style.color = '#6b7280';
+        messageEl.textContent = '💾 Saving...';
+        addNewSkillBtn.disabled = true;
+
+        const response = await fetch(`/api/skills/${selectedPortfolio}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(skillsData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save skill');
+        }
+
+        messageEl.style.color = '#10b981';
+        messageEl.textContent = '✓ Skill added successfully!';
+        newSkillInput.value = '';
+        addNewSkillBtn.disabled = false;
+
+        // Re-render the skills list with the new skill checked
+        const skillsListContainer = modalContent.querySelector('#skills-list-container');
+        let updatedHtml = '';
+
+        const allSkills = skillsData.filter(s => !s.category || s.category === roleCategory || s.category === 'General');
+        allSkills.forEach(skill => {
+          const isChecked = currentSkills.includes(skill.skill_id) || skill.skill_id === skillId;
+          updatedHtml += `<div style="margin-bottom: 0.5rem;">`;
+          updatedHtml += `<label style="display: flex; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='transparent'">`;
+          updatedHtml += `<input type="checkbox" class="skill-checkbox" value="${escapeHtml(skill.skill_id)}" ${isChecked ? 'checked' : ''} style="margin-right: 0.75rem; width: 16px; height: 16px; cursor: pointer;">`;
+          updatedHtml += `<span style="font-size: 0.875rem; color: #374151;">${escapeHtml(skill.name)}</span>`;
+          if (skill.skill_id === skillId) {
+            updatedHtml += `<span style="margin-left: 0.5rem; font-size: 0.75rem; color: #10b981; font-weight: 500;">NEW</span>`;
+          }
+          updatedHtml += `</label>`;
+          updatedHtml += `</div>`;
+        });
+
+        skillsListContainer.innerHTML = updatedHtml;
+
+        // Auto-check the new skill
+        if (!currentSkills.includes(skillId)) {
+          currentSkills.push(skillId);
+        }
+
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          messageEl.textContent = '';
+        }, 3000);
+
+      } catch (err) {
+        console.error('Error adding skill:', err);
+        messageEl.style.color = '#dc2626';
+        messageEl.textContent = '❌ Failed to save skill';
+        addNewSkillBtn.disabled = false;
+
+        // Remove from local array if save failed
+        const index = skillsData.findIndex(s => s.skill_id === skillId);
+        if (index !== -1) {
+          skillsData.splice(index, 1);
+        }
+      }
+    });
+
+    // Allow Enter key to add skill
+    newSkillInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addNewSkillBtn.click();
+      }
+    });
+
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
   }
 
   // Helper to escape HTML
